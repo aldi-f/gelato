@@ -1,0 +1,7 @@
+version: '3'
+services:
+  agim:
+    container_name: gelato
+    restart: unless-stopped
+    build:
+      context: .
