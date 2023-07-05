@@ -1,7 +1,7 @@
 from discord.ext import commands
 import discord
 from requests import get
-# import re  
+import re  
 import ffmpeg
 import subprocess
 import io
@@ -27,12 +27,13 @@ class convert(commands.Cog):
         if sys.getsizeof(data.content) > 25000000:
             await ctx.send("File too big")
             return
-        
+        prefix = re.findall("\.\w{3,4}$", url)[0][1:]
+
         with NamedTemporaryFile(mode="w+") as tf:
             try:
                 process: subprocess.Popen = (
                         ffmpeg
-                        .input("pipe:", f='mp4')
+                        .input("pipe:", f=f"{prefix}")
                         .output(tf.name, f='mp4', vcodec='libx264')
                         .overwrite_output()
                         .run_async(pipe_stdin=True, pipe_stdout= True)

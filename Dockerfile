@@ -13,4 +13,4 @@ COPY ./app ./app
 
 WORKDIR /app
 
-CMD ["python3","-u","./gelato.py"]
+CMD ["python3","./gelato.py"]
