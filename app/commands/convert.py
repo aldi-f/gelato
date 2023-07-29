@@ -1,49 +1,121 @@
+import re  
+import json
+import math
+
+import requests
+from bs4 import BeautifulSoup
+
 from discord.ext import commands
 import discord
-from requests import get
-import re  
+
 import ffmpeg
 import subprocess
-import io
-import sys
+import asyncio
 from tempfile import NamedTemporaryFile
+
+def convert_size(size_bytes):
+   if size_bytes == 0:
+       return "0B"
+   size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+   i = int(math.floor(math.log(size_bytes, 1024)))
+   p = math.pow(1024, i)
+   s = round(size_bytes / p, 2)
+   return "%s %s" % (s, size_name[i])
+
+
+async def error_reaction(ctx, message):
+    await ctx.send(message)
+    await ctx.message.add_reaction("❌")
+
 
 class convert(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.lock = asyncio.Lock()
         # self.pattern: re.Pattern = re.compile(r"https://img-9gag-fun\.9cache\.com.+")
 
     @commands.command(name='convert', aliases=['c','mp4','con'])
-    async def convert(self, ctx: discord.TextChannel, *, url:str = None):
-        if not url:
-            await ctx.send("No url provided")
-            return 
-        # check = self.pattern.findall(url)
-        # if not check:
-        #     await ctx.send("Wrong url provided")
-        #     return 
-        data = get(url)
-        print(f"Byte size of {sys.getsizeof(data.content)}")
-        if sys.getsizeof(data.content) > 25000000:
-            await ctx.send("File too big")
-            return
-        prefix = re.findall("\.\w{3,4}$", url)[0][1:]
+    async def convert(self, ctx: commands.Context, *, url:str = None):
+        async with ctx.typing():
+            
+            if "https://9gag.com/gag/" in url: #mobile shit link
+                mobile = requests.get(url)
+                soup = BeautifulSoup(mobile.text)
+                contents = json.loads(soup.find("script", type="application/ld+json").text)
+                
+                url = contents['video']['contentUrl']
+            
+            if not url:
+                await error_reaction(ctx,"No url provided")
+                return 
 
-        with NamedTemporaryFile(mode="w+") as tf:
             try:
-                process: subprocess.Popen = (
-                        ffmpeg
-                        .input("pipe:", f=f"{prefix}")
-                        .output(tf.name, f='mp4', vcodec='libx264')
-                        .overwrite_output()
-                        .run_async(pipe_stdin=True, pipe_stdout= True)
-                        )
-                process.communicate(input=data.content)
-                video = discord.File(tf.name, filename="output.mp4")
-                await ctx.reply(file=video, mention_author=False)
-            except Exception as e:
-                await ctx.send("Something went wrong!")
-                print(e)
+                head_data = requests.head(url, allow_redirects=True).headers
+            except:
+                await error_reaction(ctx,"Not valid url.")
+                return
+                      
+            content_length = int(head_data.get("Content-Length", 0))
+            content_type = head_data.get("Content-Type", "")
+
+            if not "video" in content_type:
+                await error_reaction(ctx,"Not a video download link")
+                return
+            
+            if content_length == 0 or content_length > 26000000:
+                await error_reaction(ctx,f"File either empty or too big ({convert_size(content_length)})")
+                return
+            
+            
+            data = requests.get(url, allow_redirects=True)
+            
+            delete = False
+            async with self.lock:
+                with NamedTemporaryFile(mode="w+") as tf:
+                    try:
+                        print(content_type)
+                        prefix = re.sub(".*/","",content_type)
+                        if not prefix:
+                            await error_reaction(ctx,"Didn't find prefix")
+                            raise Exception
+                        
+                        process: subprocess.Popen = (
+                                ffmpeg
+                                .input("pipe:", f=f"{prefix}")
+                                .output(tf.name, f='mp4', vcodec='libx264')
+                                .overwrite_output()
+                                .run_async(pipe_stdin=True, pipe_stdout= True)
+                                )
+                        
+                        process.communicate(input=data.content)
+                        print("##############################################")
+                        print(f"{tf.tell() = }")
+                        print("##############################################")
+                        
+                        tf.seek(0,2)
+                        
+                        if tf.tell() < 5: # check for less than 5 bytes(empty file but is binary coded with endline)
+                            await error_reaction(ctx,"Didn't find prefix")
+                            raise Exception
+                        elif tf.tell() > 26000000:
+                            await error_reaction(ctx,f"File too big ({convert_size(tf.tell())})")
+                            raise Exception
+                        
+                        tf.seek(0)
+                        video = discord.File(tf.name, filename="output.mp4")
+                        
+                        await ctx.send(f"Conversion for {ctx.author.mention}",file=video, mention_author=False)
+                        delete = True
+                        
+                        
+                    except Exception as e:
+                        await error_reaction(ctx,"Something went wrong!")
+                        print(e)
+                    finally:
+                        if delete:
+                            await ctx.message.delete()
+                        tf.close()
+                        return
         
 async def setup(bot):
     await bot.add_cog(convert(bot))
