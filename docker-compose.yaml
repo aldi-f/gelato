@@ -5,3 +5,8 @@ services:
     restart: unless-stopped
     build:
       context: .
+    volumes:
+      - ./db_data:/data
+
+volumes:
+  db_data:

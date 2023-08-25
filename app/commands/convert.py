@@ -12,6 +12,13 @@ import ffmpeg
 import subprocess
 import asyncio
 from tempfile import NamedTemporaryFile
+import pickledb
+
+
+db = pickledb.load("/data/counters.db", True)
+# 2 counters:
+#       - megabytes
+#       - internal counter
 
 def convert_size(size_bytes):
    if size_bytes == 0:
@@ -88,12 +95,10 @@ class convert(commands.Cog):
                                 )
                         
                         process.communicate(input=data.content)
-                        print("##############################################")
-                        print(f"{tf.tell() = }")
-                        print("##############################################")
-                        
+
                         tf.seek(0,2)
                         
+                        vid_size = tf.tell()
                         if tf.tell() < 5: # check for less than 5 bytes(empty file but is binary coded with endline)
                             await error_reaction(ctx,"Didn't find prefix")
                             raise Exception
@@ -103,8 +108,19 @@ class convert(commands.Cog):
                         
                         tf.seek(0)
                         video = discord.File(tf.name, filename="output.mp4")
+
+                        if not db.exists("downloaded"):
+                            db.set("downloaded", 0)
+                            db.set("counter", 1)
+                        else:
+                            downloaded = db.get("downloaded")
+                            counter = db.get("counter")
+                            id = counter + 1
+                            total_size = downloaded + vid_size
+                            db.set("downloaded", total_size)
+                            db.set("counter", id)
                         
-                        await ctx.send(f"Conversion for {ctx.author.mention}",file=video, mention_author=False)
+                        await ctx.send(f"[{id}]Conversion for {ctx.author.mention}\n{convert_size(vid_size)} ({convert_size(total_size)})",file=video, mention_author=False)
                         delete = True
                         
                         
