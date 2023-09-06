@@ -21,6 +21,9 @@ db = pickledb.load("/data/counters.db", True)
 #       - internal counter
 
 def convert_size(size_bytes):
+   """
+   Given size in bytes, convert it into readable number
+   """
    if size_bytes == 0:
        return "0B"
    size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
@@ -31,6 +34,9 @@ def convert_size(size_bytes):
 
 
 async def error_reaction(ctx, message):
+   """
+   Save me some time by wrapping both error message and the x reaction to original command issuer
+   """
     await ctx.send(message)
     await ctx.message.add_reaction("❌")
 
@@ -50,13 +56,14 @@ class convert(commands.Cog):
                 soup = BeautifulSoup(mobile.text)
                 contents = json.loads(soup.find("script", type="application/ld+json").text)
                 
-                url = contents['video']['contentUrl']
+                url = contents['video']['contentUrl'] # real link here
             
             if not url:
                 await error_reaction(ctx,"No url provided")
                 return 
 
             try:
+                # check headers first, don't want to download a whole ass 2gb file just to check size and type
                 head_data = requests.head(url, allow_redirects=True).headers
             except:
                 await error_reaction(ctx,"Not valid url.")
@@ -77,15 +84,15 @@ class convert(commands.Cog):
             data = requests.get(url, allow_redirects=True)
             
             delete = False
-            async with self.lock:
-                with NamedTemporaryFile(mode="w+") as tf:
+            async with self.lock: # lock each convert so they are synchronous
+                with NamedTemporaryFile(mode="w+") as tf: # use a temporary file for saving
                     try:
                         print(content_type)
-                        prefix = re.sub(".*/","",content_type)
+                        prefix = re.sub(".*/","",content_type) # content-type = "video/mp4" -> "mp4"
                         if not prefix:
                             await error_reaction(ctx,"Didn't find prefix")
                             raise Exception
-                        
+                        # TODO: Investigate why it cannot load all the metadata for input if link is from discord embed
                         process: subprocess.Popen = (
                                 ffmpeg
                                 .input("pipe:", f=f"{prefix}")
@@ -96,7 +103,7 @@ class convert(commands.Cog):
                         
                         process.communicate(input=data.content)
 
-                        tf.seek(0,2)
+                        tf.seek(0,2) # take me to the last byte of the video
                         
                         vid_size = tf.tell()
                         if tf.tell() < 5: # check for less than 5 bytes(empty file but is binary coded with endline)
@@ -106,10 +113,10 @@ class convert(commands.Cog):
                             await error_reaction(ctx,f"File too big ({convert_size(tf.tell())})")
                             raise Exception
                         
-                        tf.seek(0)
+                        tf.seek(0) # back to start so i can stream
                         video = discord.File(tf.name, filename="output.mp4")
 
-                        if not db.exists("downloaded"):
+                        if not db.exists("downloaded"): # only loaded once as the first video 
                             db.set("downloaded", 0)
                             db.set("counter", 1)
                         else:
