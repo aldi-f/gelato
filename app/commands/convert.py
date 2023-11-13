@@ -34,9 +34,9 @@ def convert_size(size_bytes):
 
 
 async def error_reaction(ctx, message):
-   """
-   Save me some time by wrapping both error message and the x reaction to original command issuer
-   """
+    """
+    Save me some time by wrapping both error message and the x reaction to original command issuer
+    """
     await ctx.send(message)
     await ctx.message.add_reaction("❌")
 
