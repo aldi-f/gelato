@@ -51,6 +51,10 @@ class convert(commands.Cog):
     async def convert(self, ctx: commands.Context, *, url:str = None):
         async with ctx.typing():
             
+            if not url:
+                await error_reaction(ctx,"No url provided")
+                return 
+            
             if "https://9gag.com/gag/" in url: #mobile shit link
                 mobile = requests.get(url)
                 soup = BeautifulSoup(mobile.text)
@@ -58,9 +62,6 @@ class convert(commands.Cog):
                 
                 url = contents['video']['contentUrl'] # real link here
             
-            if not url:
-                await error_reaction(ctx,"No url provided")
-                return 
 
             try:
                 # check headers first, don't want to download a whole ass 2gb file just to check size and type
