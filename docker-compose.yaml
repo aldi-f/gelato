@@ -6,7 +6,7 @@ services:
     build:
       context: .
     volumes:
-      - ./db_data:/data
+      - db_data:/data
 
 volumes:
   db_data:

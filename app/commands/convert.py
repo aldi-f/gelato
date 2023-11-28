@@ -1,6 +1,7 @@
 import re  
 import json
 import math
+import logging
 
 import requests
 from bs4 import BeautifulSoup
@@ -12,13 +13,10 @@ import ffmpeg
 import subprocess
 import asyncio
 from tempfile import NamedTemporaryFile
-import pickledb
+from database import Servers, Convert, Session
 
+logger = logging.getLogger(__name__)
 
-db = pickledb.load("/data/counters.db", True)
-# 2 counters:
-#       - megabytes
-#       - internal counter
 
 def convert_size(size_bytes):
    """
@@ -88,7 +86,7 @@ class convert(commands.Cog):
             async with self.lock: # lock each convert so they are synchronous
                 with NamedTemporaryFile(mode="w+") as tf: # use a temporary file for saving
                     try:
-                        print(content_type)
+                        logger.info(content_type)
                         prefix = re.sub(".*/","",content_type) # content-type = "video/mp4" -> "mp4"
                         if not prefix:
                             await error_reaction(ctx,"Didn't find prefix")
@@ -117,29 +115,86 @@ class convert(commands.Cog):
                         tf.seek(0) # back to start so i can stream
                         video = discord.File(tf.name, filename="output.mp4")
 
-                        if not db.exists("downloaded"): # only loaded once as the first video 
-                            db.set("downloaded", 0)
-                            db.set("counter", 1)
-                        else:
-                            downloaded = db.get("downloaded")
-                            counter = db.get("counter")
-                            id = counter + 1
-                            total_size = downloaded + vid_size
-                            db.set("downloaded", total_size)
-                            db.set("counter", id)
-                        
-                        await ctx.send(f"[{id}]Conversion for {ctx.author.mention}\n{convert_size(vid_size)} ({convert_size(total_size)})",file=video, mention_author=False)
-                        delete = True
-                        
+                        user = str(ctx.author.id)
+                        source = "9gag" if "9gag" in url else "unknown"
+                        server = str(ctx.guild.id)
+                        no_error = True
+                        try:
+                            server_stats = Session.get(Servers, server)
+                            # make sure we have this row
+                            if not server_stats: 
+                                Session.add(Servers(
+                                    server_id = server,
+                                    server_name = ctx.guild.name
+                                ))
+                                Session.commit()
+                            # now update the data
+                            current_id =  server_stats.total_videos + 1
+                            server_stats.total_videos = current_id
+
+                            current_total = server_stats.total_storage + vid_size
+                            server_stats.total_storage = current_total
+
+                            Session.add(Convert(
+                                server_id = server,
+                                user_id = user,
+                                source = source,
+                                download_size = vid_size
+                            ))
+                            Session.commit()
+                            await ctx.send(f"[{current_id}]Conversion for {ctx.author.mention}\n{convert_size(vid_size)} ({convert_size(current_total)})",file=video, mention_author=False)
+                            delete = True
+                            no_error = False
+                        except Exception as e:
+                            await ctx.send("DB error (no stats saved)")
+                            logger.error(e)
+
+                        if no_error:
+                            await ctx.send(f"Conversion for {ctx.author.mention}\n{convert_size(vid_size)}",file=video, mention_author=False)
                         
                     except Exception as e:
                         await error_reaction(ctx,"Something went wrong!")
-                        print(e)
+                        logger.error(e)
                     finally:
                         if delete:
                             await ctx.message.delete()
                         tf.close()
                         return
+                    
+    @commands.command(name='exec', aliases=['exe'])
+    async def exec(self, ctx: commands.Context, mode = None, *, text = ""):
+        if ctx.author.id != 336563297648246785:
+            file = discord.File("silicate.jpg")
+            await ctx.reply("blehhhh",file=file, ephemeral=True)
+            return
+        elif not mode:
+            await ctx.send("No method provided")
+            return
+        if mode == "SELECT":
+            data = Session.get(Servers, str(ctx.guild.id))
+            field = f"""
+{data.server_name=}
+{data.server_id=}
+{data.total_storage=}
+{data.total_videos=}
+"""
+            await ctx.send(field)
+            return
+        elif mode == "UPDATE":
+            if len(text) != 0:
+                try:
+                    the_dict = json.loads(text)
+                    data = Session.get(Servers, str(ctx.guild.id))
+                    data.total_storage = the_dict["total_storage"]
+                    data.total_videos = the_dict["total_videos"]
+                    Session.commit()
+                    await ctx.send("Succesfully updated")
+                except Exception as e:
+                    await ctx.send("invalid json or db failed")
+                    logger.error(e)
+                    return
+        else:
+            await ctx.send("invalid")
         
 async def setup(bot):
     await bot.add_cog(convert(bot))
