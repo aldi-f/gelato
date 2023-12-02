@@ -17,12 +17,12 @@ class Browser:
 
     def __init__(self):
         if not self._driver:
-            service = Service(executable_path="/app/chromedriver-linux64/chromedriver")
+            # service = Service(executable_path="/app/chromedriver-linux64/chromedriver")
             options = webdriver.ChromeOptions()
             options.add_argument('-no-sandbox')
             options.add_argument('--headless')
             options.add_argument('--disable-dev-shm-usage')
-            self._driver = webdriver.Chrome(options=options, service=service)
+            self._driver = webdriver.Chrome(options=options)#, service=service)
 
     def reel_download_url(self, url) -> str:
         self._driver.get(url)

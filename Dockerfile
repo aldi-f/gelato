@@ -1,11 +1,30 @@
-FROM python:3.10-buster
+FROM ubuntu:20.04
 
 USER root
 
-# install google chrome and ffmpeg
-RUN apt-get -y update
-RUN apt-get install -y chromium-chromedriver ffmpeg unzip
+# Set timezone:
+RUN ln -snf /usr/share/zoneinfo/$CONTAINER_TIMEZONE /etc/localtime && echo $CONTAINER_TIMEZONE > /etc/timezone
 
+
+# install google chrome and ffmpeg
+RUN echo "deb http://archive.ubuntu.com/ubuntu/ focal main restricted universe multiverse\n" > /etc/apt/sources.list \
+  && echo "deb http://archive.ubuntu.com/ubuntu/ focal-updates main restricted universe multiverse\n" >> /etc/apt/sources.list \
+  && echo "deb http://archive.ubuntu.com/ubuntu/ focal-security main restricted universe multiverse\n" >> /etc/apt/sources.list \
+  && echo "deb http://archive.ubuntu.com/ubuntu/ focal-backports main restricted universe multiverse\n" >> /etc/apt/sources.list \
+  && echo "deb http://archive.canonical.com/ubuntu focal partner\n" >> /etc/apt/sources.list 
+RUN apt-get -y update
+RUN apt-get install -y\
+    # chromium\
+    # unzip\
+    tzdata\
+    chromium-chromedriver\
+    ffmpeg\
+    python3-pip\
+    && rm -rf /var/lib/apt/lists/*
+
+
+
+RUN python3 --version
 # # install chromedriver
 # RUN echo "Geting ChromeDriver latest version from https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_" \
 #     && CHROME_MAJOR_VERSION=$(google-chrome --version | sed -E "s/.* ([0-9]+)(\.[0-9]+){3}.*/\1/") \
