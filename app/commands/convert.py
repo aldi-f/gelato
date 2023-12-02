@@ -14,6 +14,8 @@ import subprocess
 import asyncio
 from tempfile import NamedTemporaryFile
 from database import Servers, Convert, Session
+from utils import what_website
+from browser import ChromeBrowser
 
 logger = logging.getLogger(__name__)
 
@@ -52,14 +54,15 @@ class convert(commands.Cog):
             if not url:
                 await error_reaction(ctx,"No url provided")
                 return 
-            
-            if "https://9gag.com/gag/" in url: #mobile shit link
+            website = what_website(url)
+            if website == "9gag_mobile": #mobile shit link
                 mobile = requests.get(url)
                 soup = BeautifulSoup(mobile.text)
                 contents = json.loads(soup.find("script", type="application/ld+json").text)
                 
                 url = contents['video']['contentUrl'] # real link here
-            
+            elif website == "reel":
+                url = ChromeBrowser.reel_download_url(url)
 
             try:
                 # check headers first, don't want to download a whole ass 2gb file just to check size and type
@@ -116,7 +119,7 @@ class convert(commands.Cog):
                         video = discord.File(tf.name, filename="output.mp4")
 
                         user = str(ctx.author.id)
-                        source = "9gag" if "9gag" in url else "unknown"
+                        source = website
                         server = str(ctx.guild.id)
                         no_error = True
                         try:
