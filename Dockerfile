@@ -1,45 +1,32 @@
 FROM ubuntu:20.04
 
-USER root
+ENV DEBIAN_FRONTEND=noninteractive
+ENV GECKO_VERSION=v0.33.0
 
-# Set timezone:
-RUN ln -snf /usr/share/zoneinfo/$CONTAINER_TIMEZONE /etc/localtime && echo $CONTAINER_TIMEZONE > /etc/timezone
-
-
-# install google chrome and ffmpeg
-RUN echo "deb http://archive.ubuntu.com/ubuntu/ focal main restricted universe multiverse\n" > /etc/apt/sources.list \
-  && echo "deb http://archive.ubuntu.com/ubuntu/ focal-updates main restricted universe multiverse\n" >> /etc/apt/sources.list \
-  && echo "deb http://archive.ubuntu.com/ubuntu/ focal-security main restricted universe multiverse\n" >> /etc/apt/sources.list \
-  && echo "deb http://archive.ubuntu.com/ubuntu/ focal-backports main restricted universe multiverse\n" >> /etc/apt/sources.list \
-  && echo "deb http://archive.canonical.com/ubuntu focal partner\n" >> /etc/apt/sources.list 
 RUN apt-get -y update
 RUN apt-get install -y\
-    # chromium\
-    # unzip\
-    tzdata\
-    chromium-chromedriver\
+    wget\
     ffmpeg\
-    python3-pip\
+    python3-pip
+
+WORKDIR /tmp
+RUN wget https://github.com/mozilla/geckodriver/releases/download/${GECKO_VERSION}/geckodriver-${GECKO_VERSION}-linux-aarch64.tar.gz
+RUN tar -xzf geckodriver-${GECKO_VERSION}-linux-aarch64.tar.gz
+RUN chmod +x geckodriver 
+RUN mv geckodriver /usr/local/bin/
+
+RUN apt-get install -y\
+    firefox\
     && rm -rf /var/lib/apt/lists/*
 
-
-
-RUN python3 --version
-# # install chromedriver
-# RUN echo "Geting ChromeDriver latest version from https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_" \
-#     && CHROME_MAJOR_VERSION=$(google-chrome --version | sed -E "s/.* ([0-9]+)(\.[0-9]+){3}.*/\1/") \
-#     && CHROME_DRIVER_VERSION=$(wget -qO- https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_${CHROME_MAJOR_VERSION} | sed 's/\r$//') \
-#     && CHROME_DRIVER_URL="https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$CHROME_DRIVER_VERSION/linux64/chromedriver-linux64.zip" \
-#     && echo "Using ChromeDriver from: "$CHROME_DRIVER_URL \
-#     && echo "Using ChromeDriver version: "$CHROME_DRIVER_VERSION \
-#     && wget --no-verbose -O /tmp/chromedriver_linux64.zip $CHROME_DRIVER_URL \
-#     && unzip /tmp/chromedriver_linux64.zip chromedriver-linux64/chromedriver -d /app/
+RUN export MOZ_HEADLESS=1
+ENV display=:0
 
 COPY requirements.txt .
 
 RUN python3 -m pip install  -r requirements.txt --user 
 
-COPY ./app ./app
+COPY ./app /app
 
 WORKDIR /app
 

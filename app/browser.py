@@ -18,7 +18,7 @@ class Browser:
     def __init__(self):
         if not self._driver:
             # service = Service(executable_path="/app/chromedriver-linux64/chromedriver")
-            options = webdriver.ChromeOptions()
+            options = webdriver.FirefoxOptions()
             options.add_argument('-no-sandbox')
             options.add_argument('--headless')
             options.add_argument('--disable-dev-shm-usage')
