@@ -1,4 +1,5 @@
-import re  
+import re
+import io
 import json
 import math
 import logging
@@ -94,29 +95,33 @@ class convert(commands.Cog):
                         if not prefix:
                             await error_reaction(ctx,"Didn't find prefix")
                             raise Exception
-                        # TODO: Investigate why it cannot load all the metadata for input if link is from discord embed
-                        process: subprocess.Popen = (
-                                ffmpeg
-                                .input("pipe:", f=f"{prefix}")
-                                .output(tf.name, f='mp4', vcodec='libx264')
-                                .overwrite_output()
-                                .run_async(pipe_stdin=True, pipe_stdout= True)
-                                )
-                        
-                        process.communicate(input=data.content)
 
-                        tf.seek(0,2) # take me to the last byte of the video
-                        
-                        vid_size = tf.tell()
-                        if tf.tell() < 5: # check for less than 5 bytes(empty file but is binary coded with endline)
-                            await error_reaction(ctx,"Didn't find prefix")
-                            raise Exception
-                        elif tf.tell() > 26000000:
-                            await error_reaction(ctx,f"File too big ({convert_size(tf.tell())})")
-                            raise Exception
-                        
-                        tf.seek(0) # back to start so i can stream
-                        video = discord.File(tf.name, filename="output.mp4")
+                        if website != "reel":
+                            # TODO: Investigate why it cannot load all the metadata for input if link is from discord embed
+                            process: subprocess.Popen = (
+                                    ffmpeg
+                                    .input("pipe:", f=f"{prefix}")
+                                    .output(tf.name, f='mp4', vcodec='libx264')
+                                    .overwrite_output()
+                                    .run_async(pipe_stdin=True, pipe_stdout= True)
+                                    )
+                            
+                            process.communicate(input=data.content)
+
+                            tf.seek(0,2) # take me to the last byte of the video
+                            
+                            vid_size = tf.tell()
+                            if tf.tell() < 5: # check for less than 5 bytes(empty file but is binary coded with endline)
+                                await error_reaction(ctx,"Didn't find prefix")
+                                raise Exception
+                            elif tf.tell() > 26000000:
+                                await error_reaction(ctx,f"File too big ({convert_size(tf.tell())})")
+                                raise Exception
+                            
+                            tf.seek(0) # back to start so i can stream
+                            video = discord.File(tf.name, filename="output.mp4")
+                        else:
+                            video = discord.File(io.BytesIO(data.content), filename="output.mp4")
 
                         user = str(ctx.author.id)
                         source = website
