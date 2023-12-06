@@ -121,6 +121,7 @@ class convert(commands.Cog):
                             tf.seek(0) # back to start so i can stream
                             video = discord.File(tf.name, filename="output.mp4")
                         else:
+                            vid_size = content_length
                             video = discord.File(io.BytesIO(data.content), filename="output.mp4")
 
                         user = str(ctx.author.id)
