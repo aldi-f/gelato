@@ -22,7 +22,7 @@ class Browser:
             options.add_argument('-no-sandbox')
             options.add_argument('--headless')
             options.add_argument('--disable-dev-shm-usage')
-            self._driver = webdriver.Chrome(options=options, service=service)
+            self._driver = webdriver.Firefox(options=options, service=service)
 
     def reel_download_url(self, url) -> str:
         self._driver.get(url)

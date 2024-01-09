@@ -15,7 +15,7 @@ import subprocess
 import asyncio
 from tempfile import NamedTemporaryFile
 from database import Servers, Convert, Session
-from utils import what_website
+from utils import what_website, get_tweet_result
 from browser import ChromeBrowser
 
 logger = logging.getLogger(__name__)
@@ -64,9 +64,21 @@ class convert(commands.Cog):
                 url = contents['video']['contentUrl'] # real link here
             elif website == "reel":
                 url = ChromeBrowser.reel_download_url(url)
-
+            elif website == "twitter":
+                # for now it's a paid api while i figure out how to get it through selenium
+                response = get_tweet_result(url)
+                if response.status_code != 500:
+                    await error_reaction(ctx,"Bromken")
+                    return
+                data = response.json()[0]
+                if data['urls'][0]['extension'] != "mp4":
+                    await error_reaction(ctx,"No video link found")
+                    return
+                # i could use this later, but for now let's just get the highest quality
+                sorted_urls = sorted(data['urls'],reverse=True, key=lambda x: x['quality'])
+                url = sorted_urls[0]['url']
             try:
-                # check headers first, don't want to download a whole ass 2gb file just to check size and type
+                # make sure to check the headers first so we can get the size
                 head_data = requests.head(url, allow_redirects=True).headers
             except:
                 await error_reaction(ctx,"Not valid url.")
@@ -96,8 +108,7 @@ class convert(commands.Cog):
                             await error_reaction(ctx,"Didn't find prefix")
                             raise Exception
 
-                        if website != "reel":
-                            # TODO: Investigate why it cannot load all the metadata for input if link is from discord embed
+                        if website in ("9gag","9gag_mobile"):
                             process: subprocess.Popen = (
                                     ffmpeg
                                     .input("pipe:", f=f"{prefix}")
@@ -167,9 +178,7 @@ class convert(commands.Cog):
                     finally:
                         if delete:
                             await ctx.message.delete()
-                        tf.close()
-                        return
-                    
+
     @commands.command(name='exec', aliases=['exe'])
     async def exec(self, ctx: commands.Context, mode = None, *, text = ""):
         if ctx.author.id != 336563297648246785:
