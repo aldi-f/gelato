@@ -5,3 +5,4 @@ python-dotenv==1.0.0
 beautifulsoup4==4.12.2
 SQLAlchemy==2.0.23
 selenium==4.15.2
+yt-dlp==2023.12.30

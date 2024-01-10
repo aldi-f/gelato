@@ -3,7 +3,6 @@ import io
 import json
 import math
 import logging
-
 import requests
 from bs4 import BeautifulSoup
 
@@ -13,6 +12,8 @@ import discord
 import ffmpeg
 import subprocess
 import asyncio
+from yt_dlp import YoutubeDL
+from contextlib import redirect_stdout
 from tempfile import NamedTemporaryFile
 from database import Servers, Convert, Session
 from utils import what_website, get_tweet_result
@@ -78,36 +79,50 @@ class convert(commands.Cog):
                 # i could use this later, but for now let's just get the highest quality
                 sorted_urls = sorted(data['urls'],reverse=True, key=lambda x: x['quality'])
                 url = sorted_urls[0]['url']
-            try:
-                # make sure to check the headers first so we can get the size
-                head_data = requests.head(url, allow_redirects=True).headers
-            except:
-                await error_reaction(ctx,"Not valid url.")
-                return
-                      
-            content_length = int(head_data.get("Content-Length", 0))
-            content_type = head_data.get("Content-Type", "")
+            elif website == "youtube":
 
-            if not "video" in content_type:
-                await error_reaction(ctx,"Not a video download link")
-                return
-            
+                params = {
+                    "outtmpl": "-",
+                    'logtostderr': True
+                }
+
+                with YoutubeDL(params) as ydl:
+                    info = ydl.extract_info(url, download=False)
+                
+                content_length = info['filesize_approx']
+            if website != "youtube":
+                
+                try:
+                    # make sure to check the headers first so we can get the size
+                    head_data = requests.head(url, allow_redirects=True).headers
+                except:
+                    await error_reaction(ctx,"Not valid url.")
+                    return
+                        
+                content_length = int(head_data.get("Content-Length", 0))
+                content_type = head_data.get("Content-Type", "")
+
+                if not "video" in content_type:
+                    await error_reaction(ctx,"Not a video download link")
+                    return
+                
             if content_length == 0 or content_length > 26000000:
                 await error_reaction(ctx,f"File either empty or too big ({convert_size(content_length)})")
                 return
             
-            
-            data = requests.get(url, allow_redirects=True)
+            if website != "youtube":
+                data = requests.get(url, allow_redirects=True)
             
             delete = False
             async with self.lock: # lock each convert so they are synchronous
                 with NamedTemporaryFile(mode="w+") as tf: # use a temporary file for saving
                     try:
-                        logger.info(content_type)
-                        prefix = re.sub(".*/","",content_type) # content-type = "video/mp4" -> "mp4"
-                        if not prefix:
-                            await error_reaction(ctx,"Didn't find prefix")
-                            raise Exception
+                        if website != "youtube":
+                            logger.info(content_type)
+                            prefix = re.sub(".*/","",content_type) # content-type = "video/mp4" -> "mp4"
+                            if not prefix:
+                                await error_reaction(ctx,"Didn't find prefix")
+                                raise Exception
 
                         if website in ("9gag","9gag_mobile"):
                             process: subprocess.Popen = (
@@ -132,6 +147,18 @@ class convert(commands.Cog):
                             
                             tf.seek(0) # back to start so i can stream
                             video = discord.File(tf.name, filename="output.mp4")
+                        elif website == "youtube":
+                            params = {
+                                "outtmpl": "-",
+                                "logtostderr": True
+                            }
+
+                            buffer = io.BytesIO()
+                            with redirect_stdout(buffer), YoutubeDL(params) as ydl:
+                                ydl.download([url])
+
+                            vid_size = buffer.tell()
+                            video = discord.File(buffer, filename="output.mp4")
                         else:
                             vid_size = content_length
                             video = discord.File(io.BytesIO(data.content), filename="output.mp4")
@@ -192,11 +219,11 @@ class convert(commands.Cog):
         if mode == "SELECT":
             data = Session.get(Servers, str(ctx.guild.id))
             field = f"""
-{data.server_name=}
-{data.server_id=}
-{data.total_storage=}
-{data.total_videos=}
-"""
+                    {data.server_name=}
+                    {data.server_id=}
+                    {data.total_storage=}
+                    {data.total_videos=}
+                    """
             await ctx.send(field)
             return
         elif mode == "UPDATE":

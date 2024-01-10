@@ -13,15 +13,22 @@ def is_instagram_reels_url(url: str) -> bool:
         return True
     return False
 
-def is_9gag_url(url: str) -> bool:
-    pattern = r"^https?://img-9gag-fun\.9cache\.com/.*'"
+# def is_9gag_url(url: str) -> bool:
+#     pattern = r"^https?://img-9gag-fun\.9cache\.com/.*'"
+#     match = re.match(pattern, url)
+#     if match:
+#         return True
+#     return False
+
+def is_twitter_url(url: str) -> bool:
+    pattern = r"https?://(?:www\.)?((vx)?twitter|x)(\.com)?/\w+/status/.*"
     match = re.match(pattern, url)
     if match:
         return True
     return False
 
-def is_twitter_url(url: str) -> bool:
-    pattern = r"https?://(?:www\.)?((vx)?twitter|x)(\.com)?/\w+/status/.*"
+def is_youtube_url(url: str) -> bool:
+    pattern = r"https?://(www\.)?youtu(\.?be)?.*"
     match = re.match(pattern, url)
     if match:
         return True
@@ -36,6 +43,8 @@ def what_website(url: str) -> str:
         return "reel"
     elif is_twitter_url(url):
         return "twitter"
+    elif is_youtube_url(url):
+        return "youtube"
     else:
         return "unknown"
     
