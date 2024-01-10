@@ -158,6 +158,7 @@ class convert(commands.Cog):
                                 ydl.download([url])
 
                             vid_size = buffer.tell()
+                            buffer.seek(0)
                             video = discord.File(buffer, filename="output.mp4")
                         else:
                             vid_size = content_length
