@@ -54,5 +54,5 @@ def get_tweet_result(url: str) -> requests.Response:
         }
 
     payload = { "url": url }
-    response = requests.post(url, json=payload, headers=headers)
+    response = requests.post(RAPID_URL, json=payload, headers=headers)
     return response

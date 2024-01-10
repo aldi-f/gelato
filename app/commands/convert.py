@@ -67,8 +67,9 @@ class convert(commands.Cog):
             elif website == "twitter":
                 # for now it's a paid api while i figure out how to get it through selenium
                 response = get_tweet_result(url)
-                if response.status_code != 500:
-                    await error_reaction(ctx,"Bromken")
+                if response.status_code != 200:
+                    await error_reaction(ctx,"Broken")
+                    logger.error(response.json())
                     return
                 data = response.json()[0]
                 if data['urls'][0]['extension'] != "mp4":
