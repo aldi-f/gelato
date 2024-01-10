@@ -28,9 +28,9 @@ def is_twitter_url(url: str) -> bool:
     return False
 
 def what_website(url: str) -> str:
-    if "https://9gag.com/gag/" in url: # mobile 9gag
+    if url.startswith("https://9gag.com/gag/"): # mobile 9gag
         return "9gag_mobile"
-    elif is_9gag_url(url): # 9gag
+    elif url.startswith("https://img-9gag-fun.9cache.com"): # 9gag
         return "9gag"
     elif is_instagram_reels_url(url): # instagram reel
         return "reel"
