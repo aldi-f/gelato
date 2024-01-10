@@ -138,12 +138,6 @@ class convert(commands.Cog):
                             tf.seek(0,2) # take me to the last byte of the video
                             
                             vid_size = tf.tell()
-                            if tf.tell() < 5: # check for less than 5 bytes(empty file but is binary coded with endline)
-                                await error_reaction(ctx,"Didn't find prefix")
-                                raise Exception
-                            elif tf.tell() > 26000000:
-                                await error_reaction(ctx,f"File too big ({convert_size(tf.tell())})")
-                                raise Exception
                             
                             tf.seek(0) # back to start so i can stream
                             video = discord.File(tf.name, filename="output.mp4")
@@ -169,6 +163,12 @@ class convert(commands.Cog):
                         server = str(ctx.guild.id)
                         no_error = True
                         try:
+                            if vid_size < 5: # check for less than 5 bytes(empty file but is binary coded with endline)
+                                await error_reaction(ctx,"Didn't find prefix")
+                                raise Exception
+                            elif vid_size > 26000000:
+                                await error_reaction(ctx,f"File too big ({convert_size(vid_size)})")
+                                raise Exception
                             server_stats = Session.get(Servers, server)
                             # make sure we have this row
                             if not server_stats: 
