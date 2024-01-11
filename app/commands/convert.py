@@ -165,10 +165,10 @@ class convert(commands.Cog):
                         try:
                             if vid_size < 5: # check for less than 5 bytes(empty file but is binary coded with endline)
                                 await error_reaction(ctx,"Didn't find prefix")
-                                raise Exception
+                                return
                             elif vid_size > 26000000:
                                 await error_reaction(ctx,f"File too big ({convert_size(vid_size)})")
-                                raise Exception
+                                return
                             server_stats = Session.get(Servers, server)
                             # make sure we have this row
                             if not server_stats: 
