@@ -97,7 +97,7 @@ class convert(commands.Cog):
                     content_length = info["filesize_approx"]
                     title = info["title"]
                 except: # crashes when format is not found (means nothing is less than 25MB)
-                    await error_reaction(ctx,f"File is too big.")
+                    await error_reaction(ctx,f"Cannot download.")
 
             if website != "youtube":
                 
