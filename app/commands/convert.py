@@ -22,6 +22,8 @@ from browser import ChromeBrowser
 logger = logging.getLogger(__name__)
 
 
+YT_DLP_FORMAT="bestvideo[height>=480][filesize<22M]+bestaudio[filesize<3M]/b[filesize<25M]"
+
 def convert_size(size_bytes):
    """
    Given size in bytes, convert it into readable number
@@ -53,6 +55,7 @@ class convert(commands.Cog):
     async def convert(self, ctx: commands.Context, *, url:str = None):
         async with ctx.typing():
             
+            title = ""
             if not url:
                 await error_reaction(ctx,"No url provided")
                 return 
@@ -83,13 +86,19 @@ class convert(commands.Cog):
 
                 params = {
                     "outtmpl": "-",
-                    'logtostderr': True
+                    'logtostderr': True,
+                    "geo_bypass": True,
+                    "format": YT_DLP_FORMAT
                 }
+                try:
+                    with YoutubeDL(params) as ydl:
+                        info = ydl.extract_info(url, download=False)
+                    
+                    content_length = info["filesize_approx"]
+                    title = info["title"]
+                except: # crashes when format is not found (means nothing is less than 25MB)
+                    await error_reaction(ctx,f"File is too big.")
 
-                with YoutubeDL(params) as ydl:
-                    info = ydl.extract_info(url, download=False)
-                
-                content_length = info['filesize_approx']
             if website != "youtube":
                 
                 try:
@@ -144,7 +153,9 @@ class convert(commands.Cog):
                         elif website == "youtube":
                             params = {
                                 "outtmpl": "-",
-                                "logtostderr": True
+                                'logtostderr': True,
+                                "geo_bypass": True,
+                                "format": YT_DLP_FORMAT
                             }
 
                             buffer = io.BytesIO()
@@ -191,7 +202,7 @@ class convert(commands.Cog):
                                 download_size = vid_size
                             ))
                             Session.commit()
-                            await ctx.send(f"[{current_id}]Conversion for {ctx.author.mention}\n{convert_size(vid_size)} ({convert_size(current_total)})",file=video, mention_author=False)
+                            await ctx.send(f"[{current_id}]Conversion for {ctx.author.mention}\n{convert_size(vid_size)} ({convert_size(current_total)})\n {title}",file=video, mention_author=False)
                             delete = True
                             no_error = False
                         except Exception as e:
