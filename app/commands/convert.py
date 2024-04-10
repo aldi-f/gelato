@@ -84,6 +84,8 @@ class convert(commands.Cog):
                 yt_params = {
                     "outtmpl": "-",
                     "logtostderr": True,
+                    "quiet": True,
+                    "no_warnings": True,
                     "geo_bypass": True,
                     "format": "b[filesize<25M]"
                 }
@@ -98,6 +100,8 @@ class convert(commands.Cog):
                         yt_params = {
                             "outtmpl": "-",
                             "logtostderr": True,
+                            "quiet": True,
+                            "no_warnings": True,
                             "geo_bypass": True,
                         }
                         with YoutubeDL(yt_params) as ydl:
