@@ -81,8 +81,7 @@ class convert(commands.Cog):
                 sorted_urls = sorted(data['urls'],reverse=True, key=lambda x: x['quality'])
                 url = sorted_urls[0]['url']
             elif website == "youtube":
-
-                params = {
+                yt_params = {
                     "outtmpl": "-",
                     "logtostderr": True,
                     "geo_bypass": True,
@@ -90,12 +89,22 @@ class convert(commands.Cog):
                 }
 
                 try:
-                    with YoutubeDL(params) as ydl:
+                    with YoutubeDL(yt_params) as ydl:
                         info = ydl.extract_info(url, download=False)
 
-                except: # crashes when format is not found (means nothing is less than 25MB)
-                    await error_reaction(ctx,f"Cannot download.")
-                    return
+                except:
+                    # try again with no format
+                    try:
+                        yt_params = {
+                            "outtmpl": "-",
+                            "logtostderr": True,
+                            "geo_bypass": True,
+                        }
+                        with YoutubeDL(yt_params) as ydl:
+                            info = ydl.extract_info(url, download=False)
+                    except:
+                        await error_reaction(ctx,f"Cannot download.")
+                        return
 
                 content_length = info.get('filesize') or info.get("filesize_approx")
 
@@ -153,15 +162,9 @@ class convert(commands.Cog):
                             tf.seek(0) # back to start so i can stream
                             video = discord.File(tf.name, filename="output.mp4")
                         elif website == "youtube":
-                            params = {
-                                "outtmpl": "-",
-                                "logtostderr": True,
-                                "geo_bypass": True,
-                                "format": "b[filesize<25M]"
-                            }
 
                             buffer = io.BytesIO()
-                            with redirect_stdout(buffer), YoutubeDL(params) as ydl:
+                            with redirect_stdout(buffer), YoutubeDL(yt_params) as ydl:
                                 ydl.download([url])
 
                             vid_size = buffer.tell()
