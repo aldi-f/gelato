@@ -110,9 +110,9 @@ class convert(commands.Cog):
                         await error_reaction(ctx,f"Cannot download.")
                         return
 
-                content_length = info.get('filesize') or info.get("filesize_approx")
+                content_length = info.get("filesize") or info.get("filesize_approx")
 
-                title = info.get("title") or ""
+                title += f"\n\n`{info.get('title')}`" if title in info else ""
                 
             if website != "youtube":
                 
@@ -219,7 +219,7 @@ class convert(commands.Cog):
                             logger.error(e)
 
                         if no_error:
-                            await ctx.send(f"Conversion for {ctx.author.mention}\n{convert_size(vid_size)}\n{title}",file=video, mention_author=False)
+                            await ctx.send(f"Conversion for {ctx.author.mention}\n{convert_size(vid_size)}{title}",file=video, mention_author=False)
                         
                     except Exception as e:
                         await error_reaction(ctx,"Something went wrong!")
