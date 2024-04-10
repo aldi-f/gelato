@@ -93,15 +93,14 @@ class convert(commands.Cog):
                     with YoutubeDL(params) as ydl:
                         info = ydl.extract_info(url, download=False)
 
-                    content_length = info.get('filesize') or info.get("filesize_approx")
-
-                    title = info.get("title") or ""
-
                 except: # crashes when format is not found (means nothing is less than 25MB)
                     await error_reaction(ctx,f"Cannot download.")
+                    return
 
+                content_length = info.get('filesize') or info.get("filesize_approx")
+
+                title = info.get("title") or ""
                 
-                content_length = info['filesize_approx']
             if website != "youtube":
                 
                 try:
