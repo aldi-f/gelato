@@ -112,7 +112,7 @@ class convert(commands.Cog):
 
                 content_length = info.get("filesize") or info.get("filesize_approx")
 
-                title += f"\n\n`{info.get('title')}`" if title in info else ""
+                title += f"\n\n`{info.get('title')}`" if "title" in info else ""
                 
             if website != "youtube":
                 
