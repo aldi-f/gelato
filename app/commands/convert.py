@@ -154,7 +154,7 @@ class convert(commands.Cog):
                                     .input("pipe:", f=f"{prefix}")
                                     .output(tf.name, f='mp4', vcodec='libx264')
                                     .overwrite_output()
-                                    .run_async(pipe_stdin=True, pipe_stdout= True, quiet=True)
+                                    .run_async(pipe_stdin=True, pipe_stdout= True)
                                     )
                             
                             process.communicate(input=data.content)
