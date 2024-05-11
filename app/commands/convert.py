@@ -52,8 +52,11 @@ class convert(commands.Cog):
     @commands.command(name='convert', aliases=['c','mp4','con'])
     async def convert(self, ctx: commands.Context, *, url:str = None):
         async with ctx.typing():
+            reply_to = None
+            if ctx.message.reference:
+                reply_to = await ctx.fetch_message(ctx.message.reference.message_id)
             title = ""
-            
+            source_url = url
             if not url:
                 await error_reaction(ctx,"No url provided")
                 return 
@@ -208,10 +211,14 @@ class convert(commands.Cog):
                                 server_id = server,
                                 user_id = user,
                                 source = source,
+                                source_url = source_url,
                                 download_size = vid_size
                             ))
                             Session.commit()
-                            await ctx.send(f"[{current_id}]Conversion for {ctx.author.mention}\n{convert_size(vid_size)} ({convert_size(current_total)})\n{title}",file=video)
+                            if reply_to:
+                                await ctx.reply(f"[{current_id}]Conversion for {ctx.author.mention}\n{convert_size(vid_size)} ({convert_size(current_total)})\n{title}",file=video)
+                            else:
+                                await ctx.send(f"[{current_id}]Conversion for {ctx.author.mention}\n{convert_size(vid_size)} ({convert_size(current_total)})\n{title}",file=video)
                             delete = True
                             no_error = False
                         except Exception as e:
@@ -219,7 +226,10 @@ class convert(commands.Cog):
                             logger.error(e)
 
                         if no_error:
-                            await ctx.send(f"Conversion for {ctx.author.mention}\n{convert_size(vid_size)}{title}",file=video, mention_author=False)
+                            if reply_to:
+                                await ctx.reply(f"Conversion for {ctx.author.mention}\n{convert_size(vid_size)}{title}",file=video, mention_author=False)
+                            else:
+                                await ctx.send(f"Conversion for {ctx.author.mention}\n{convert_size(vid_size)}{title}",file=video, mention_author=False)
                         
                     except Exception as e:
                         await error_reaction(ctx,"Something went wrong!")
@@ -262,6 +272,19 @@ class convert(commands.Cog):
                     return
         else:
             await ctx.send("invalid")
+
+    @commands.command(name='source', aliases=['s'])
+    async def source(self, ctx: commands.Context, source_id: int|None = None):
+        if not source_id or not isinstance(source_id,int):
+            await ctx.send("Provide the source id")
+            return
         
+        data = Session.get(Convert, source_id)
+        if not data.source_url:
+            await ctx.send("No source added for that")
+        else:
+            await ctx.send(data.source_url)
+            
+
 async def setup(bot):
     await bot.add_cog(convert(bot))

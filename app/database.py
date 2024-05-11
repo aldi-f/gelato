@@ -27,7 +27,6 @@ class Servers(Base):
     server_name = mapped_column(String(30), nullable=True)
     total_videos = mapped_column(Integer, default=0)
     total_storage = mapped_column(Integer,  default=0)
-
     convert_relate = relationship("Convert", back_populates="server_relate")
     
 
@@ -38,6 +37,7 @@ class Convert(Base):
     server_id = mapped_column(String(30), ForeignKey('servers.server_id'))
     user_id = mapped_column(String(30))
     source = mapped_column(String(30))
+    source_url = mapped_column(String(200))
     download_size = mapped_column(Integer)
 
     server_relate = relationship("Servers", back_populates="convert_relate")
