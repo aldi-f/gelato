@@ -37,7 +37,6 @@ class Convert(Base):
     server_id = mapped_column(String(30), ForeignKey('servers.server_id'))
     user_id = mapped_column(String(30))
     source = mapped_column(String(30))
-    source_url = mapped_column(String(200))
     download_size = mapped_column(Integer)
 
     server_relate = relationship("Servers", back_populates="convert_relate")
