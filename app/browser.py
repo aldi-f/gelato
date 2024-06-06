@@ -26,7 +26,7 @@ class Browser:
 
     def reel_download_url(self, url) -> str:
         self._driver.get(url)
-        wait = WebDriverWait(self._driver, 10)
+        wait = WebDriverWait(self._driver, 20)
         element = wait.until(EC.presence_of_element_located((By.TAG_NAME, 'video')))
 
         reel_source = element.get_attribute('src')
