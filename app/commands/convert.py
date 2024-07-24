@@ -13,7 +13,6 @@ import ffmpeg
 import subprocess
 import asyncio
 from yt_dlp import YoutubeDL
-from contextlib import redirect_stdout
 from tempfile import NamedTemporaryFile
 from database import Servers, Convert, Session
 from utils import what_website, get_tweet_result
@@ -89,7 +88,7 @@ class convert(commands.Cog):
                     "quiet": True,
                     "no_warnings": True,
                     "geo_bypass": True,
-                    "format": "b[filesize<25M]"
+                    "format": "[filesize<25M]"
                 }
 
                 try:
@@ -168,14 +167,16 @@ class convert(commands.Cog):
                             tf.seek(0) # back to start so i can stream
                             video = discord.File(tf.name, filename="output.mp4")
                         elif website == "youtube":
-
-                            buffer = io.BytesIO()
-                            with redirect_stdout(buffer), YoutubeDL(yt_params) as ydl:
+                            yt_params['outtmpl'] = tf.name
+                            with YoutubeDL(yt_params) as ydl:
                                 ydl.download([url])
 
-                            vid_size = buffer.tell()
-                            buffer.seek(0)
-                            video = discord.File(buffer, filename="output.mp4")
+                            tf.seek(0,2) # take me to the last byte of the video
+                            
+                            vid_size = tf.tell()
+                            
+                            tf.seek(0) # back to start so i can stream
+                            video = discord.File(tf.name, filename="output.mp4")
                         else:
                             vid_size = content_length
                             video = discord.File(io.BytesIO(data.content), filename="output.mp4")
