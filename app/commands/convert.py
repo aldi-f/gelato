@@ -84,7 +84,7 @@ class convert(commands.Cog):
             elif website == "youtube":
                 yt_params = {
                     "outtmpl": "-",
-                    "logtostderr": True,
+                    "logtostderr": False,
                     "quiet": True,
                     "no_warnings": True,
                     "geo_bypass": True,
@@ -100,7 +100,7 @@ class convert(commands.Cog):
                     try:
                         yt_params = {
                             "outtmpl": "-",
-                            "logtostderr": True,
+                            "logtostderr": False,
                             "quiet": True,
                             "no_warnings": True,
                             "geo_bypass": True,
@@ -171,12 +171,12 @@ class convert(commands.Cog):
                             with YoutubeDL(yt_params) as ydl:
                                 ydl.download([url])
 
-                            tf.seek(0,2) # take me to the last byte of the video
+                            with open(f"{tf.name}.mp4", "rb") as f:
+
+                                f.seek(0,2) # take me to the last byte of the video
+                                vid_size = f.tell()
                             
-                            vid_size = tf.tell()
-                            
-                            tf.seek(0) # back to start so i can stream
-                            video = discord.File(tf.name, filename="output.mp4")
+                            video = discord.File(f"{tf.name}.mp4", filename="output.mp4")
                         else:
                             vid_size = content_length
                             video = discord.File(io.BytesIO(data.content), filename="output.mp4")
