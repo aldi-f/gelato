@@ -88,7 +88,7 @@ class convert(commands.Cog):
                     "quiet": True,
                     "no_warnings": True,
                     "geo_bypass": True,
-                    "format": "ba[filesize<25M]"
+                    "format": "b[filesize<25M]"
                 }
 
                 try:
