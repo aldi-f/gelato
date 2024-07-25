@@ -168,6 +168,7 @@ class convert(commands.Cog):
                             video = discord.File(tf.name, filename="output.mp4")
                         elif website == "youtube":
                             yt_params['outtmpl'] = tf.name
+                            yt_params['merge_output_format'] = "mp4"
                             with YoutubeDL(yt_params) as ydl:
                                 ydl.download([url])
 
