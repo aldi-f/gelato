@@ -88,7 +88,7 @@ class convert(commands.Cog):
                     "quiet": True,
                     "no_warnings": True,
                     "geo_bypass": True,
-                    "format": "b[filesize<25M]"
+                    "format": "bv*[ext=mp4][filesize<24M]+ba[filesize<1M]"
                 }
 
                 try:
