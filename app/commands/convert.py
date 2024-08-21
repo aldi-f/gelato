@@ -49,7 +49,7 @@ class convert(commands.Cog):
         # self.pattern: re.Pattern = re.compile(r"https://img-9gag-fun\.9cache\.com.+")
 
     @commands.command(name='convert', aliases=['c','mp4','con'])
-    async def convert(self, ctx: commands.Context, *, url:str = None, user_mention:discord.User = None):
+    async def convert(self, ctx: commands.Context, url:str = None, user_mentioned:discord.Member = None):
         async with ctx.typing():
             reply_to = None
             if ctx.message.reference:
@@ -227,8 +227,8 @@ class convert(commands.Cog):
 
                         if no_error:
                             mention_message = ""
-                            if user_mention:
-                                mention_message = f"\n{user_mention.mention}"
+                            if user_mentioned:
+                                mention_message = f"\n{user_mentioned.mention}"
                             if reply_to:
                                 await reply_to.reply(f"Conversion for {ctx.author.mention}\n{convert_size(vid_size)}{mention_message}{title}",file=video, mention_author=False)
                             else:
