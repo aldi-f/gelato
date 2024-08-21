@@ -54,6 +54,9 @@ class convert(commands.Cog):
             reply_to = None
             if ctx.message.reference:
                 reply_to = await ctx.fetch_message(ctx.message.reference.message_id)
+            mention_message = ""
+            if user_mentioned:
+                mention_message = f"\n{user_mentioned.mention}"
             title = ""
             if not url:
                 await error_reaction(ctx,"No url provided")
@@ -216,9 +219,9 @@ class convert(commands.Cog):
                             ))
                             Session.commit()
                             if reply_to:
-                                await reply_to.reply(f"[{current_id}]Conversion for {ctx.author.mention}\n{convert_size(vid_size)} ({convert_size(current_total)})\n{title}",file=video)
+                                await reply_to.reply(f"[{current_id}]Conversion for {ctx.author.mention}\n{convert_size(vid_size)} ({convert_size(current_total)}){mention_message}\n{title}",file=video)
                             else:
-                                await ctx.send(f"[{current_id}]Conversion for {ctx.author.mention}\n{convert_size(vid_size)} ({convert_size(current_total)})\n{title}",file=video)
+                                await ctx.send(f"[{current_id}]Conversion for {ctx.author.mention}\n{convert_size(vid_size)} ({convert_size(current_total)}){mention_message}\n{title}",file=video)
                             delete = True
                             no_error = False
                         except Exception as e:
@@ -226,9 +229,7 @@ class convert(commands.Cog):
                             logger.error(e)
 
                         if no_error:
-                            mention_message = ""
-                            if user_mentioned:
-                                mention_message = f"\n{user_mentioned.mention}"
+
                             if reply_to:
                                 await reply_to.reply(f"Conversion for {ctx.author.mention}\n{convert_size(vid_size)}{mention_message}{title}",file=video, mention_author=False)
                             else:
