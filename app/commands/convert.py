@@ -49,7 +49,7 @@ class convert(commands.Cog):
         # self.pattern: re.Pattern = re.compile(r"https://img-9gag-fun\.9cache\.com.+")
 
     @commands.command(name='convert', aliases=['c','mp4','con'])
-    async def convert(self, ctx: commands.Context, *, url:str | None = None, user_mention:discord.User | None = None):
+    async def convert(self, ctx: commands.Context, *, url:str = None, user_mention:discord.User = None):
         async with ctx.typing():
             reply_to = None
             if ctx.message.reference:
