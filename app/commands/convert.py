@@ -153,7 +153,7 @@ class convert(commands.Cog):
                             process: subprocess.Popen = (
                                     ffmpeg
                                     .input("pipe:", f=f"{prefix}")
-                                    .output(tf.name, f='mp4', vcodec='libx264')
+                                    .output(tf.name, f='mp4', vcodec='h264_v4l2m2m')
                                     .overwrite_output()
                                     .run_async(pipe_stdin=True, pipe_stdout= True, quiet=True)
                                     )
