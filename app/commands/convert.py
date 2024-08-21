@@ -49,7 +49,7 @@ class convert(commands.Cog):
         # self.pattern: re.Pattern = re.compile(r"https://img-9gag-fun\.9cache\.com.+")
 
     @commands.command(name='convert', aliases=['c','mp4','con'])
-    async def convert(self, ctx: commands.Context, *, url:str = None):
+    async def convert(self, ctx: commands.Context, *, url:str | None = None, user_mention:discord.User | None = None):
         async with ctx.typing():
             reply_to = None
             if ctx.message.reference:
@@ -57,13 +57,13 @@ class convert(commands.Cog):
             title = ""
             if not url:
                 await error_reaction(ctx,"No url provided")
-                return 
+                return
             website = what_website(url)
             if website == "9gag_mobile": #mobile shit link
                 mobile = requests.get(url)
                 soup = BeautifulSoup(mobile.text)
                 contents = json.loads(soup.find("script", type="application/ld+json").text)
-                
+
                 url = contents['video']['contentUrl'] # real link here
             elif website == "reel":
                 url = ChromeBrowser.reel_download_url(url)
@@ -114,30 +114,30 @@ class convert(commands.Cog):
                 content_length = info.get("filesize") or info.get("filesize_approx")
 
                 title += f"\n\n`{info.get('title')}`" if "title" in info else ""
-                
+
             if website != "youtube":
-                
+
                 try:
                     # make sure to check the headers first so we can get the size
                     head_data = requests.head(url, allow_redirects=True).headers
                 except:
                     await error_reaction(ctx,"Not valid url.")
                     return
-                        
+
                 content_length = int(head_data.get("Content-Length", 0))
                 content_type = head_data.get("Content-Type", "")
 
                 if not "video" in content_type:
                     await error_reaction(ctx,"Not a video download link")
                     return
-                
+
             if content_length == 0 or content_length > 26000000:
                 await error_reaction(ctx,f"File either empty or too big ({convert_size(content_length)})")
                 return
-            
+
             if website != "youtube":
                 data = requests.get(url, allow_redirects=True)
-            
+
             delete = False
             async with self.lock: # lock each convert so they are synchronous
                 with NamedTemporaryFile(mode="w+") as tf: # use a temporary file for saving
@@ -157,13 +157,13 @@ class convert(commands.Cog):
                                     .overwrite_output()
                                     .run_async(pipe_stdin=True, pipe_stdout= True, quiet=True)
                                     )
-                            
+
                             process.communicate(input=data.content)
 
                             tf.seek(0,2) # take me to the last byte of the video
-                            
+
                             vid_size = tf.tell()
-                            
+
                             tf.seek(0) # back to start so i can stream
                             video = discord.File(tf.name, filename="output.mp4")
                         elif website == "youtube":
@@ -176,7 +176,7 @@ class convert(commands.Cog):
 
                                 f.seek(0,2) # take me to the last byte of the video
                                 vid_size = f.tell()
-                            
+
                             video = discord.File(f"{tf.name}.mp4", filename="output.mp4")
                         else:
                             vid_size = content_length
@@ -195,7 +195,7 @@ class convert(commands.Cog):
                                 return
                             server_stats = Session.get(Servers, server)
                             # make sure we have this row
-                            if not server_stats: 
+                            if not server_stats:
                                 Session.add(Servers(
                                     server_id = server,
                                     server_name = ctx.guild.name
@@ -226,11 +226,14 @@ class convert(commands.Cog):
                             logger.error(e)
 
                         if no_error:
+                            mention_message = ""
+                            if user_mention:
+                                mention_message = f"\n{user_mention.mention}"
                             if reply_to:
-                                await reply_to.reply(f"Conversion for {ctx.author.mention}\n{convert_size(vid_size)}{title}",file=video, mention_author=False)
+                                await reply_to.reply(f"Conversion for {ctx.author.mention}\n{convert_size(vid_size)}{mention_message}{title}",file=video, mention_author=False)
                             else:
-                                await ctx.send(f"Conversion for {ctx.author.mention}\n{convert_size(vid_size)}{title}",file=video, mention_author=False)
-                        
+                                await ctx.send(f"Conversion for {ctx.author.mention}\n{convert_size(vid_size)}{mention_message}{title}",file=video, mention_author=False)
+
                     except Exception as e:
                         await error_reaction(ctx,"Something went wrong!")
                         logger.error(e)
