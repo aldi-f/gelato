@@ -16,7 +16,7 @@ from yt_dlp import YoutubeDL
 from tempfile import NamedTemporaryFile
 from database import Servers, Convert, Session
 from utils import what_website, get_tweet_result
-from browser import ChromeBrowser
+# from browser import ChromeBrowser
 
 logger = logging.getLogger(__name__)
 
