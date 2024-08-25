@@ -69,7 +69,9 @@ class convert(commands.Cog):
 
                 url = contents['video']['contentUrl'] # real link here
             elif website == "reel":
-                url = ChromeBrowser.reel_download_url(url)
+                # url = ChromeBrowser.reel_download_url(url)
+                yt_params = {}
+                content_length = 1 # no filesize known before merge
             elif website == "twitter":
                 # for now it's a paid api while i figure out how to get it through selenium
                 response = get_tweet_result(url)
@@ -118,7 +120,7 @@ class convert(commands.Cog):
 
                 title += f"\n\n`{info.get('title')}`" if "title" in info else ""
 
-            if website != "youtube":
+            if website not in ("youtube", "reel"):
 
                 try:
                     # make sure to check the headers first so we can get the size
@@ -138,14 +140,14 @@ class convert(commands.Cog):
                 await error_reaction(ctx,f"File either empty or too big ({convert_size(content_length)})")
                 return
 
-            if website != "youtube":
+            if website not in ("youtube", "reel"):
                 data = requests.get(url, allow_redirects=True)
 
             delete = False
             async with self.lock: # lock each convert so they are synchronous
                 with NamedTemporaryFile(mode="w+") as tf: # use a temporary file for saving
                     try:
-                        if website != "youtube":
+                        if website not in ("youtube", "reel"):
                             logger.info(content_type)
                             prefix = re.sub(".*/","",content_type) # content-type = "video/mp4" -> "mp4"
                             if not prefix:
@@ -169,7 +171,7 @@ class convert(commands.Cog):
 
                             tf.seek(0) # back to start so i can stream
                             video = discord.File(tf.name, filename="output.mp4")
-                        elif website == "youtube":
+                        elif website in ("youtube", "reel"):
                             yt_params['outtmpl'] = tf.name
                             yt_params['merge_output_format'] = "mp4"
                             with YoutubeDL(yt_params) as ydl:
