@@ -4,6 +4,6 @@ ffmpeg-python==0.2.0
 python-dotenv==1.0.0
 beautifulsoup4==4.12.2
 SQLAlchemy==2.0.23
-selenium==4.15.2
+#selenium==4.15.2
 yt-dlp
 
