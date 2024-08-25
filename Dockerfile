@@ -1,7 +1,7 @@
 FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV GECKO_VERSION=v0.33.0
+ENV GECKO_VERSION=v0.35.0
 
 RUN apt-get -y update
 RUN apt-get install -y\
@@ -10,8 +10,8 @@ RUN apt-get install -y\
     python3-pip
 
 WORKDIR /tmp
-RUN wget https://github.com/mozilla/geckodriver/releases/download/${GECKO_VERSION}/geckodriver-${GECKO_VERSION}-linux-aarch64.tar.gz
-RUN tar -xzf geckodriver-${GECKO_VERSION}-linux-aarch64.tar.gz
+RUN wget https://github.com/mozilla/geckodriver/releases/download/${GECKO_VERSION}/geckodriver-${GECKO_VERSION}-linux64.tar.gz
+RUN tar -xzf geckodriver-${GECKO_VERSION}-linux64.tar.gz
 RUN chmod +x geckodriver 
 RUN mv geckodriver /usr/local/bin/
 
