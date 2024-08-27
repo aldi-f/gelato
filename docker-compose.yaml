@@ -7,6 +7,9 @@ services:
       context: .
     volumes:
       - db_data:/data
+      # mount /tmp on ram to save read/writes
+      - type: tmpfs
+        target: /tmp
 
 volumes:
   db_data:
