@@ -2,8 +2,15 @@ from app.websites.base import Base
 import json
 import requests
 from bs4 import BeautifulSoup
+import os
+from yt_dlp import YoutubeDL
+from contextlib import redirect_stdout
+from pathlib import Path
+import tempfile
+import ffmpeg
 
 class NineGAG(Base):
+    _ffmpeg_codec = "libx264"
 
     @property
     def download_url(self):
@@ -11,34 +18,48 @@ class NineGAG(Base):
             mobile = requests.get(self.url)
             soup = BeautifulSoup(mobile.text)
             contents = json.loads(soup.find("script", type="application/ld+json").text)
-            url = contents['video']['contentUrl'] # real link here
+
+            return contents['video']['contentUrl'] # real link here
 
         return self.url 
 
 
-    def download_video(self):...
-        
+    def download_video(self):
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
+            output_name = temp_file.name
+            self.output_path.append(output_name)
+
+        ydl_opts = {
+            'outtmpl': output_name,
+            "quiet": True,
+            "no_warnings": True,
+            "geo_bypass": True,
+        }
+
+        # download video
+        with YoutubeDL(ydl_opts) as foo:
+            foo.download([self.download_url])
+
+        # extra steps after downloading
+        self._convert_to_mp4()
+        # self._compress()
+
+    def _convert_to_mp4(self):
+        input_file = self.output_path[-1]
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
+            output_name = temp_file.name
+            self.output_path.append(output_name)
+
+        (ffmpeg
+        .input(input_file)
+        .output(output_name, f='mp4', vcodec=self._ffmpeg_codec)
+        .run())
 
 
+    def _compress(self):
+        input_file = self.output_path[-1]
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
+            output_name = temp_file.name
+            self.output_path.append(output_name)
 
-
-
-
-
-    # def __init__(self, url: HttpUrl):
-    #     self.url = url
-    #     self.downloaded = False
-    #     self.content = bytes()
-
-    # @abstractmethod
-    # def download_video(self):
-    #     pass
-
-    # @property
-    # def content_length(self) -> Optional[int]:
-    #     return len(self.content)
-
-
-    # def save_video(self, filename: str):
-    #     with open(filename, "wb") as f:
-    #         f.write(self.content)
+        # compress logic here
