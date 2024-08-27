@@ -1,13 +1,13 @@
-from app.websites.base import Base
 import json
-import requests
-from bs4 import BeautifulSoup
-import os
-from yt_dlp import YoutubeDL
-from contextlib import redirect_stdout
-from pathlib import Path
-import tempfile
 import ffmpeg
+import requests
+import tempfile
+
+from bs4 import BeautifulSoup
+from yt_dlp import YoutubeDL
+
+from app.websites.base import Base
+
 
 class NineGAG(Base):
     _ffmpeg_codec = "libx264"
@@ -43,6 +43,7 @@ class NineGAG(Base):
         # extra steps after downloading
         self._convert_to_mp4()
         # self._compress()
+
 
     def _convert_to_mp4(self):
         input_file = self.output_path[-1]

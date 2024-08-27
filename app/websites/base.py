@@ -1,8 +1,9 @@
-from abc import ABC, abstractmethod
-from typing import Optional
-from pydantic import HttpUrl
-import requests
 import os
+import requests
+
+from abc import ABC, abstractmethod
+from pydantic import HttpUrl
+
 
 class Base(ABC):
     def __init__(self, url: HttpUrl):
@@ -23,22 +24,27 @@ class Base(ABC):
             return data
         raise ValueError("Output path is empty")
 
+
     @property
     def content_length_before(self) -> int:
         head_data = requests.head(self.download_url, allow_redirects=True).headers
         return int(head_data.get("Content-Length", 0))
     
+
     @property
     def content_length_after(self) -> int:
         return len(self.content)
     
+
     @abstractmethod
     def download_video(self):
         pass
 
+
     def save_video(self, filename: str):
         with open(filename, "wb") as f:
             f.write(self.content)
+
 
     def cleanup(self):
         for path in self.output_path:
