@@ -51,8 +51,8 @@ class convert(commands.Cog):
             if size_before == 0 or size_before > 26000000:
                 await error_reaction(ctx,f"File either empty or too big ({convert_size(size_before)})")
                 return
+            
             try:
-
                 # Download the actual video
                 try:
                     website.download_video()
@@ -74,9 +74,9 @@ class convert(commands.Cog):
                 # TODO: database path
 
                 if reply_to:
-                    await reply_to.reply(f"Conversion for {ctx.author.mention}\n{convert_size(vid_size)}{mention_message}{title}",file=video, mention_author=False)
+                    await reply_to.reply(f"Conversion for {ctx.author.mention}\n{convert_size(size_after)}{mention_message}{title}",file=video, mention_author=False)
                 else:
-                    await ctx.send(f"Conversion for {ctx.author.mention}\n{convert_size(vid_size)}{mention_message}{title}",file=video, mention_author=False)
+                    await ctx.send(f"Conversion for {ctx.author.mention}\n{convert_size(size_after)}{mention_message}{title}",file=video, mention_author=False)
             except Exception as e:
                 await error_reaction(ctx,"Something went wrong!")
                 logger.error(e)
