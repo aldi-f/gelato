@@ -13,12 +13,8 @@ def is_instagram_reels_url(url: str) -> bool:
         return True
     return False
 
-# def is_9gag_url(url: str) -> bool:
-#     pattern = r"^https?://img-9gag-fun\.9cache\.com/.*'"
-#     match = re.match(pattern, url)
-#     if match:
-#         return True
-#     return False
+def is_9gag_url(url: str) -> bool:
+    return url.startswith("https://9gag.com/gag/") or url.startswith("https://img-9gag-fun.9cache.com")
 
 def is_twitter_url(url: str) -> bool:
     pattern = r"https?://(?:www\.)?((vx)?twitter|x)(\.com)?/\w+/status/.*"
@@ -35,9 +31,7 @@ def is_youtube_url(url: str) -> bool:
     return False
 
 def what_website(url: str) -> str:
-    if url.startswith("https://9gag.com/gag/"): # mobile 9gag
-        return "9gag_mobile"
-    elif url.startswith("https://img-9gag-fun.9cache.com"): # 9gag
+    if is_9gag_url(url):
         return "9gag"
     elif is_instagram_reels_url(url): # instagram reel
         return "reel"
@@ -65,3 +59,15 @@ def get_tweet_result(url: str) -> requests.Response:
     payload = { "url": url }
     response = requests.post(RAPID_URL, json=payload, headers=headers)
     return response
+
+def convert_size(size_bytes):
+   """
+   Given size in bytes, convert it into readable number
+   """
+   if size_bytes == 0:
+       return "0B"
+   size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+   i = int(math.floor(math.log(size_bytes, 1024)))
+   p = math.pow(1024, i)
+   s = round(size_bytes / p, 2)
+   return "%s %s" % (s, size_name[i])

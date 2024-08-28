@@ -11,7 +11,12 @@ from app.websites.base import Base
 
 class NineGAG(Base):
     _ffmpeg_codec = "libx264"
-
+    yt_params = {
+        "quiet": True,
+        "no_warnings": True,
+        "geo_bypass": True,
+    }
+    
     @property
     def download_url(self):
         if self.url.startswith("https://9gag.com/gag/"): # mobile 9gag
@@ -29,15 +34,10 @@ class NineGAG(Base):
             output_name = temp_file.name
             self.output_path.append(output_name)
 
-        ydl_opts = {
-            'outtmpl': output_name,
-            "quiet": True,
-            "no_warnings": True,
-            "geo_bypass": True,
-        }
+        self.yt_params["outtmpl"]= output_name
 
         # download video
-        with YoutubeDL(ydl_opts) as foo:
+        with YoutubeDL(self.yt_params) as foo:
             foo.download([self.download_url])
 
         # extra steps after downloading
@@ -57,10 +57,10 @@ class NineGAG(Base):
         .run())
 
 
-    def _compress(self):
-        input_file = self.output_path[-1]
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
-            output_name = temp_file.name
-            self.output_path.append(output_name)
+    # def _compress(self):
+    #     input_file = self.output_path[-1]
+    #     with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
+    #         output_name = temp_file.name
+    #         self.output_path.append(output_name)
 
         # compress logic here
