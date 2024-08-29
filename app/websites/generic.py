@@ -1,12 +1,8 @@
-import json
 import ffmpeg
 import requests
 import tempfile
 
-from bs4 import BeautifulSoup
-from yt_dlp import YoutubeDL
-
-from app.websites.base import Base
+from websites.base import Base
 
 
 class Generic(Base):

@@ -1,9 +1,11 @@
 import os
 import requests
+import logging
 
 from abc import ABC, abstractmethod
 from pydantic import HttpUrl
 
+logger = logging.getLogger(__name__)
 
 class Base(ABC):
     def __init__(self, url: HttpUrl):
@@ -47,5 +49,6 @@ class Base(ABC):
 
 
     def cleanup(self):
+        return
         for path in self.output_path:
             os.remove(path)

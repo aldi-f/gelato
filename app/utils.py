@@ -1,6 +1,7 @@
 import re
 import os 
 import requests
+import math
 
 RAPID_URL = os.getenv("RAPID_URL")
 RAPID_KEY = os.getenv("RAPID_KEY")

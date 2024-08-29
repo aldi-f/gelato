@@ -1,11 +1,8 @@
-import json
-import ffmpeg
-import requests
 import tempfile
 
 from yt_dlp import YoutubeDL
 
-from app.websites.base import Base
+from websites.base import Base
 
 
 class Youtube(Base):
@@ -14,6 +11,7 @@ class Youtube(Base):
         "quiet": True,
         "no_warnings": True,
         "geo_bypass": True,
+        "overwrites": True,
         "format": "bv*[ext=mp4][filesize<24M]+ba[filesize<1M]"
     }
 

@@ -1,30 +1,31 @@
-import json
 import ffmpeg
-import requests
+import logging
 import tempfile
 
 from bs4 import BeautifulSoup
 from yt_dlp import YoutubeDL
 
-from app.websites.base import Base
+from websites.base import Base
 
+logger = logging.getLogger(__name__)
 
 class NineGAG(Base):
     _ffmpeg_codec = "libx264"
     yt_params = {
-        "quiet": True,
-        "no_warnings": True,
+        # "quiet": True,
+        # "no_warnings": True,
         "geo_bypass": True,
+        "overwrites": True,
     }
     
     @property
     def download_url(self):
-        if self.url.startswith("https://9gag.com/gag/"): # mobile 9gag
-            mobile = requests.get(self.url)
-            soup = BeautifulSoup(mobile.text)
-            contents = json.loads(soup.find("script", type="application/ld+json").text)
+        # if self.url.startswith("https://9gag.com/gag/"): # mobile 9gag
+        #     mobile = requests.get(self.url)
+        #     soup = BeautifulSoup(mobile.text)
+        #     contents = json.loads(soup.find("script", type="application/ld+json").text)
 
-            return contents['video']['contentUrl'] # real link here
+        #     return contents['video']['contentUrl'] # real link here
 
         return self.url 
 
@@ -35,7 +36,6 @@ class NineGAG(Base):
             self.output_path.append(output_name)
 
         self.yt_params["outtmpl"]= output_name
-
         # download video
         with YoutubeDL(self.yt_params) as foo:
             foo.download([self.download_url])
@@ -54,6 +54,7 @@ class NineGAG(Base):
         (ffmpeg
         .input(input_file)
         .output(output_name, f='mp4', vcodec=self._ffmpeg_codec)
+        .overwrite_output()
         .run())
 
 
