@@ -15,7 +15,7 @@ import asyncio
 from yt_dlp import YoutubeDL
 from tempfile import NamedTemporaryFile
 from database import Servers, Convert, Session
-from utils import what_website, get_tweet_result
+from utils import what_website, get_tweet_result, get_reel_video_url
 # from browser import ChromeBrowser
 
 logger = logging.getLogger(__name__)
@@ -68,10 +68,8 @@ class convert(commands.Cog):
                 contents = json.loads(soup.find("script", type="application/ld+json").text)
 
                 url = contents['video']['contentUrl'] # real link here
-            elif website == "reel":
-                # url = ChromeBrowser.reel_download_url(url)
-                yt_params = {}
-                content_length = 1 # no filesize known before merge
+            elif website == "reel": # find real url with graphql
+                url = get_reel_video_url(url)
             elif website == "twitter":
                 # for now it's a paid api while i figure out how to get it through selenium
                 response = get_tweet_result(url)
@@ -120,7 +118,7 @@ class convert(commands.Cog):
 
                 title += f"\n\n`{info.get('title')}`" if "title" in info else ""
 
-            if website not in ("youtube", "reel"):
+            if website not in ("youtube"):
 
                 try:
                     # make sure to check the headers first so we can get the size
@@ -140,14 +138,14 @@ class convert(commands.Cog):
                 await error_reaction(ctx,f"File either empty or too big ({convert_size(content_length)})")
                 return
 
-            if website not in ("youtube", "reel"):
+            if website not in ("youtube"):
                 data = requests.get(url, allow_redirects=True)
 
             delete = False
             async with self.lock: # lock each convert so they are synchronous
                 with NamedTemporaryFile(mode="w+") as tf: # use a temporary file for saving
                     try:
-                        if website not in ("youtube", "reel"):
+                        if website not in ("youtube"):
                             logger.info(content_type)
                             prefix = re.sub(".*/","",content_type) # content-type = "video/mp4" -> "mp4"
                             if not prefix:
@@ -171,7 +169,7 @@ class convert(commands.Cog):
 
                             tf.seek(0) # back to start so i can stream
                             video = discord.File(tf.name, filename="output.mp4")
-                        elif website in ("youtube", "reel"):
+                        elif website in ("youtube"):
                             yt_params['outtmpl'] = tf.name
                             yt_params['merge_output_format'] = "mp4"
                             with YoutubeDL(yt_params) as ydl:

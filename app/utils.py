@@ -1,5 +1,6 @@
 import re
 import os 
+import json
 import requests
 
 RAPID_URL = os.getenv("RAPID_URL")
@@ -65,3 +66,26 @@ def get_tweet_result(url: str) -> requests.Response:
     payload = { "url": url }
     response = requests.post(RAPID_URL, json=payload, headers=headers)
     return response
+
+
+def find_reel_id(url:str):
+    pattern = r'https?://(?:www\.)?instagram\.com/(?:reel|p)/([^/?]+)'
+    match = re.search(pattern, url)
+    if match:
+        return match.group(1)
+    
+def get_reel_video_url(url:str):
+    video_id = find_reel_id(url)
+    
+    url = "https://www.instagram.com/graphql/query"
+    payload = {
+        "variables": json.dumps({"shortcode": video_id}),
+        "doc_id": "8845758582119845"
+    }
+
+    response = requests.post(url, data=payload)
+
+    data = response.json()
+    
+    return data['data']['xdt_shortcode_media']['video_url']
+        
