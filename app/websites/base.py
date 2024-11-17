@@ -11,7 +11,7 @@ FFMPEG_CODEC = os.getenv("FFMPEG_CODEC", "libx264")
 logger = logging.getLogger(__name__)
 
 class Base(ABC):
-    def __init__(self, url: HttpUrl):
+    def __init__(self, url: str):
         self.url = url
         self.downloaded = False
         self.output_path = []

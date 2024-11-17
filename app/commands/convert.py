@@ -44,7 +44,7 @@ class convert(commands.Cog):
 
             if is_9gag_url(url):
                 website = NineGAG(url)
-            elfi is_twitter_url(url):
+            elif is_twitter_url(url):
                 website = Twitter(url)
             elif is_youtube_url(url):
                 website = Youtube(url)
