@@ -48,7 +48,10 @@ class Base(ABC):
         pass
 
 
-    def compress_video(self):
+    def convert_video(self):
+        pass
+
+    def compress_video_light(self):
         input_file = self.output_path[-1]
         target_size_bytes = 10 * 1024 * 1024  # 10MB
 
@@ -56,15 +59,11 @@ class Base(ABC):
             output_name = temp_file.name
             self.output_path.append(output_name)
 
-        # Get video duration and properties
         probe = ffmpeg.probe(input_file)
         duration = float(probe['format']['duration'])
-        
-        # Calculate target bitrate (95% of theoretical maximum)
         target_bitrate = int((target_size_bytes * 8) / duration * 0.95)
 
         try:
-            # First compression attempt - balanced settings
             (ffmpeg
             .input(input_file)
             .output(output_name,
@@ -77,40 +76,67 @@ class Base(ABC):
                     audio_bitrate='96k')
             .overwrite_output()
             .run(capture_stdout=True, capture_stderr=True))
+        except ffmpeg.Error as e:
+            print(f"FFmpeg error occurred: {e.stderr.decode()}")
+            raise
 
-            # If still too large, try stronger compression
-            if os.path.getsize(output_name) > target_size_bytes:
-                (ffmpeg
-                .input(input_file)
-                .output(output_name,
-                        f='mp4',
-                        vcodec=self._ffmpeg_codec,
-                        crf=32,
-                        maxrate=f'{target_bitrate}',
-                        bufsize=f'{target_bitrate//2}',
-                        preset='slow',
-                        acodec='aac',
-                        audio_bitrate='64k')
-                .overwrite_output()
-                .run(capture_stdout=True, capture_stderr=True))
+    def compress_video_medium(self):
+        input_file = self.output_path[-1]
+        target_size_bytes = 10 * 1024 * 1024
+        
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
+            output_name = temp_file.name
+            self.output_path.append(output_name)
 
-                # Final attempt with maximum compression if still too large
-                if os.path.getsize(output_name) > target_size_bytes:
-                    (ffmpeg
-                    .input(input_file)
-                    .output(output_name,
-                            f='mp4',
-                            vcodec=self._ffmpeg_codec,
-                            crf=35,
-                            maxrate=f'{target_bitrate}',
-                            bufsize=f'{target_bitrate//2}',
-                            preset='veryslow',
-                            acodec='aac',
-                            audio_bitrate='32k',
-                            s='854x480')  # Reduce resolution if needed
-                    .overwrite_output()
-                    .run(capture_stdout=True, capture_stderr=True))
+        probe = ffmpeg.probe(input_file)
+        duration = float(probe['format']['duration'])
+        target_bitrate = int((target_size_bytes * 8) / duration * 0.95)
 
+        try:
+            (ffmpeg
+            .input(input_file)
+            .output(output_name,
+                    f='mp4',
+                    vcodec=self._ffmpeg_codec,
+                    crf=32,
+                    maxrate=f'{target_bitrate}',
+                    bufsize=f'{target_bitrate//2}',
+                    preset='slow',
+                    acodec='aac',
+                    audio_bitrate='64k')
+            .overwrite_output()
+            .run(capture_stdout=True, capture_stderr=True))
+        except ffmpeg.Error as e:
+            print(f"FFmpeg error occurred: {e.stderr.decode()}")
+            raise
+
+    def compress_video_maximum(self):
+        input_file = self.output_path[-1]
+        target_size_bytes = 10 * 1024 * 1024
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
+            output_name = temp_file.name
+            self.output_path.append(output_name)
+
+        probe = ffmpeg.probe(input_file)
+        duration = float(probe['format']['duration'])
+        target_bitrate = int((target_size_bytes * 8) / duration * 0.95)
+
+        try:
+            (ffmpeg
+            .input(input_file)
+            .output(output_name,
+                    f='mp4',
+                    vcodec=self._ffmpeg_codec,
+                    crf=35,
+                    maxrate=f'{target_bitrate}',
+                    bufsize=f'{target_bitrate//2}',
+                    preset='veryslow',
+                    acodec='aac',
+                    audio_bitrate='32k',
+                    s='854x480')
+            .overwrite_output()
+            .run(capture_stdout=True, capture_stderr=True))
         except ffmpeg.Error as e:
             print(f"FFmpeg error occurred: {e.stderr.decode()}")
             raise
@@ -122,6 +148,5 @@ class Base(ABC):
 
 
     def cleanup(self):
-        return
         for path in self.output_path:
             os.remove(path)

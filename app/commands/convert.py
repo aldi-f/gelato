@@ -65,21 +65,44 @@ class convert(commands.Cog):
                     await error_reaction(ctx)
                     logger.error(e)
                     return
-
-                await status_message.edit(content="⚙️ Converting video...")
-                website._convert_to_mp4()
-
-                await status_message.edit(content="🗜️ Compressing video...")
-                website.compress_video()
+                # Convert to mp4 if needed
+                if website.convert_to_mp4:
+                    await status_message.edit(content="⚙️ Converting video...")
+                    website.convert_video()
                 
-                # Check for size after downloading
+                # Check for size after converting
                 size_after = website.content_length_after
                 if size_after < 5: # empty file but is binary coded with endline)
                     await status_message.edit(content="❌ Conversion failed!")
                     await error_reaction(ctx)
                     return
-                elif size_after > 10485760:
+                elif size_after > 104857600: # 100MB
                     await status_message.edit(content=f"❌ File size too large! ({convert_size(size_after)})")
+                    await error_reaction(ctx)
+                    return
+                elif size_after > 10485760: # 10MB
+                    # Try compressing with increasing levels
+                    await status_message.edit(content=f"🔄 File too large ({convert_size(size_after)}). Trying light compression...")
+                    website.compress_video_light()
+                    
+                    size_after = website.content_length_after
+                    if size_after > 10485760:
+                        await status_message.edit(content=f"🔄 Light compression insufficient ({convert_size(size_after)}). Trying medium compression...")
+                        website.compress_video_medium()
+                        
+                        size_after = website.content_length_after
+                        if size_after > 10485760:
+                            await status_message.edit(content=f"🔄 Medium compression insufficient ({convert_size(size_after)}). Trying maximum compression...")
+                            website.compress_video_maximum()
+                
+                # Check for size after compressing
+                size_after = website.content_length_after
+                if size_after < 5: # empty file but is binary coded with endline)
+                    await status_message.edit(content="❌ Compression failed!")
+                    await error_reaction(ctx)
+                    return
+                elif size_after > 104857600: # 100MB
+                    await status_message.edit(content=f"❌ File size too large even after compressing! ({convert_size(size_after)})")
                     await error_reaction(ctx)
                     return
                 

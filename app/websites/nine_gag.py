@@ -40,12 +40,8 @@ class NineGAG(Base):
         with YoutubeDL(self.yt_params) as foo:
             foo.download([self.download_url])
 
-        # extra steps after downloading
-        self._convert_to_mp4()
-        # self._compress()
 
-
-    def _convert_to_mp4(self):
+    def convert_video(self):
         input_file = self.output_path[-1]
         with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
             output_name = temp_file.name
@@ -57,11 +53,3 @@ class NineGAG(Base):
         .overwrite_output()
         .run())
 
-
-    # def compress_video(self):
-    #     input_file = self.output_path[-1]
-    #     with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
-    #         output_name = temp_file.name
-    #         self.output_path.append(output_name)
-
-    #     # compress logic here
