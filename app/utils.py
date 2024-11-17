@@ -3,10 +3,6 @@ import os
 import requests
 import math
 
-RAPID_URL = os.getenv("RAPID_URL")
-RAPID_KEY = os.getenv("RAPID_KEY")
-RAPID_HOST = os.getenv("RAPID_HOST")
-
 def is_instagram_reels_url(url: str) -> bool:
     pattern = r"https?://(?:www\.)?instagram\.com/reel/.*"
     match = re.match(pattern, url)
@@ -15,7 +11,7 @@ def is_instagram_reels_url(url: str) -> bool:
     return False
 
 def is_9gag_url(url: str) -> bool:
-    return url.startswith("https://9gag.com/gag/") or url.startswith("https://img-9gag-fun.9cache.com")
+    return url.startswith("https://img-9gag-fun.9cache.com")
 
 def is_twitter_url(url: str) -> bool:
     pattern = r"https?://(?:www\.)?((vx)?twitter|x)(\.com)?/\w+/status/.*"
@@ -43,23 +39,6 @@ def what_website(url: str) -> str:
     else:
         return "unknown"
     
-def get_tweet_result(url: str) -> requests.Response:
-
-    # it only works with the default twitter url
-    if "x.com" in url:
-        url = url.replace("x.com","twitter.com")
-    if "vxtwitter.com" in url:
-        url = url.replace("vxtwitter.com","twitter.com")
-
-    headers = {
-        "content-type": "application/json",
-        "X-RapidAPI-Key": RAPID_KEY,
-        "X-RapidAPI-Host": RAPID_HOST
-        }
-
-    payload = { "url": url }
-    response = requests.post(RAPID_URL, json=payload, headers=headers)
-    return response
 
 def convert_size(size_bytes):
    """

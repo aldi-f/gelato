@@ -3,8 +3,8 @@ import logging
 from discord.ext import commands
 import discord
 
-from utils import is_9gag_url, is_youtube_url, is_instagram_reels_url, convert_size
-from websites import Generic, Youtube, NineGAG, Instagram
+from utils import is_9gag_url, is_youtube_url, is_instagram_reels_url, is_twitter_url, convert_size
+from websites import Generic, Youtube, NineGAG, Instagram, Twitter
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +44,8 @@ class convert(commands.Cog):
 
             if is_9gag_url(url):
                 website = NineGAG(url)
+            elfi is_twitter_url(url):
+                website = Twitter(url)
             elif is_youtube_url(url):
                 website = Youtube(url)
             elif is_instagram_reels_url(url):
@@ -53,7 +55,7 @@ class convert(commands.Cog):
 
             # Check for size before downloading
             size_before = website.content_length_before
-            if size_before == 0 or size_before > 10485760:
+            if size_before == 0 or size_before > 104857600:
                 await error_reaction(ctx,f"File either empty or too big ({convert_size(size_before)})")
                 return
             

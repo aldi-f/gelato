@@ -11,25 +11,13 @@ logger = logging.getLogger(__name__)
 
 class NineGAG(Base):
     yt_params: dict[str,bool|str|int]= {
-        # "quiet": True,
-        # "no_warnings": True,
+        "quiet": True,
+        "no_warnings": True,
         "geo_bypass": True,
         "overwrites": True,
     }
     convert_to_mp4 = True
     
-    @property
-    def download_url(self):
-        # if self.url.startswith("https://9gag.com/gag/"): # mobile 9gag
-        #     mobile = requests.get(self.url)
-        #     soup = BeautifulSoup(mobile.text)
-        #     contents = json.loads(soup.find("script", type="application/ld+json").text)
-
-        #     return contents['video']['contentUrl'] # real link here
-
-        return self.url 
-
-
     def download_video(self):
         with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
             output_name = temp_file.name
