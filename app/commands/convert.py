@@ -3,8 +3,8 @@ import logging
 from discord.ext import commands
 import discord
 
-from utils import is_9gag_url, is_youtube_url, convert_size
-from websites import Generic, Youtube, NineGAG
+from utils import is_9gag_url, is_youtube_url, is_instagram_reels_url, convert_size
+from websites import Generic, Youtube, NineGAG, Instagram
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class convert(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='convert2', aliases=['c2',])
+    @commands.command(name='convert', aliases=['c',])
     async def convert(self, ctx: commands.Context, url: str | None = None, users_mentioned: commands.Greedy[discord.Member] = None, roles_mentioned: commands.Greedy[discord.Role] = None):
         async with ctx.typing():
             if not url:
@@ -46,6 +46,8 @@ class convert(commands.Cog):
                 website = NineGAG(url)
             elif is_youtube_url(url):
                 website = Youtube(url)
+            elif is_instagram_reels_url(url):
+                website = Instagram(url)
             else:
                 website = Generic(url)
 
@@ -81,14 +83,26 @@ class convert(commands.Cog):
                     await error_reaction(ctx)
                     return
                 elif size_after > 10485760: # 10MB
-                    # Try compressing with increasing levels
-                    await status_message.edit(content=f"🔄 File too large ({convert_size(size_after)}). Trying light compression...")
-                    website.compress_video_light()
+                    # Lower resolution if it is higher than 480p
+                    await status_message.edit(content=f"🔄 File too large ({convert_size(size_after)}). Trying to lower resolution..")
+                    _, height = website.resolution
+
+                    # If video is higher than 720p, lower it to 720p
+                    if height > 720: 
+                        website.lower_resolution(720)
+                    # Otherwise, lower it to 480p. If it is already 480p, it will not change anything
+                    else:
+                        website.lower_resolution(480)
+
+                    if website.content_length_after > 10485760:
+                        # Try compressing with increasing levels
+                        await status_message.edit(content=f"🔄 File too large ({convert_size(size_after)}). Trying light compression...")
+                        website.compress_video_light()
                     
-                    size_after = website.content_length_after
-                    if size_after > 10485760:
+                    if website.content_length_after > 10485760:
                         await status_message.edit(content=f"🔄 Light compression insufficient ({convert_size(size_after)}). Trying medium compression...")
                         website.compress_video_medium()
+
                         
                         size_after = website.content_length_after
                         if size_after > 10485760:
@@ -101,7 +115,7 @@ class convert(commands.Cog):
                     await status_message.edit(content="❌ Compression failed!")
                     await error_reaction(ctx)
                     return
-                elif size_after > 104857600: # 100MB
+                elif size_after > 10485760: # 10MB
                     await status_message.edit(content=f"❌ File size too large even after compressing! ({convert_size(size_after)})")
                     await error_reaction(ctx)
                     return
@@ -116,7 +130,7 @@ class convert(commands.Cog):
                 else:
                     await ctx.send(f"Conversion for {ctx.author.mention}\n{convert_size(size_after)}{mention_message}{title}",file=video, mention_author=False)
 
-                await status_message.edit(content="✅ Conversion complete!")
+                await status_message.edit(content="✅ Conversion complete!", delete_after=5)
             except Exception as e:
                 await status_message.edit(content="❌ Process failed!")
                 await error_reaction(ctx)

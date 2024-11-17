@@ -6,7 +6,7 @@ services:
     build:
       context: .
     volumes:
-      - db_data:/data
+      # - db_data:/data
       # mount /tmp on ram to save read/writes
       - type: tmpfs
         target: /tmp

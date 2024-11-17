@@ -1,5 +1,3 @@
-import os
-import ffmpeg
 import requests
 import tempfile
 
