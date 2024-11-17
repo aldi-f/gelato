@@ -7,12 +7,12 @@ from websites.base import Base
 
 class Youtube(Base):
     _ffmpeg_codec = "libx264"
-    yt_params = {
+    yt_params: dict[str,bool|str|int] = {
         "quiet": True,
         "no_warnings": True,
         "geo_bypass": True,
         "overwrites": True,
-        "format": "bv*[ext=mp4][filesize<24M]+ba[filesize<1M]"
+        "format": "bv*[ext=mp4][filesize<9M]+ba[filesize<1M]"
     }
 
     @property

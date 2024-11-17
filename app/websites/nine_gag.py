@@ -10,13 +10,13 @@ from websites.base import Base
 logger = logging.getLogger(__name__)
 
 class NineGAG(Base):
-    _ffmpeg_codec = "libx264"
-    yt_params = {
+    yt_params: dict[str,bool|str|int]= {
         # "quiet": True,
         # "no_warnings": True,
         "geo_bypass": True,
         "overwrites": True,
     }
+    convert_to_mp4 = True
     
     @property
     def download_url(self):
@@ -58,10 +58,10 @@ class NineGAG(Base):
         .run())
 
 
-    # def _compress(self):
+    # def compress_video(self):
     #     input_file = self.output_path[-1]
     #     with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
     #         output_name = temp_file.name
     #         self.output_path.append(output_name)
 
-        # compress logic here
+    #     # compress logic here
