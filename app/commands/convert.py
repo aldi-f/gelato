@@ -43,20 +43,26 @@ class convert(commands.Cog):
             if roles_mentioned:
                 mention_message += " ".join([role.mention for role in roles_mentioned])
 
-            if is_9gag_url(url):
-                website = NineGAG(url)
-            elif is_twitter_url(url):
-                website = Twitter(url)
-            elif is_youtube_url(url):
-                website = Youtube(url)
-            elif is_instagram_reels_url(url):
-                website = Instagram(url)
-            else:
-                website = Generic(url)
+            try: 
+                if is_9gag_url(url):
+                    website = NineGAG(url)
+                elif is_twitter_url(url):
+                    website = Twitter(url)
+                elif is_youtube_url(url):
+                    website = Youtube(url)
+                elif is_instagram_reels_url(url):
+                    website = Instagram(url)
+                else:
+                    website = Generic(url)
+            except Exception as e:
+                await status_message.edit(content="❌ Invalid URL!")
+                await error_reaction(ctx)
+                logger.error(e)
+                return
 
             # Check for size before downloading
             size_before = website.content_length_before
-            if size_before == 0 or size_before > 104857600:
+            if size_before == 0 or size_before > 1048576000:
                 await error_reaction(ctx,f"File either empty or too big ({convert_size(size_before)})")
                 return
             
@@ -73,8 +79,13 @@ class convert(commands.Cog):
                 # Convert to mp4 if needed
                 if website.convert_to_mp4:
                     await status_message.edit(content="⚙️ Converting video...")
-                    website.convert_video()
-                
+                    try:
+                        await website.convert_video()
+                    except Exception as e:
+                        await status_message.edit(content="❌ Conversion failed!")
+                        await error_reaction(ctx)
+                        logger.error(e)
+                        return
                 # Check for size after converting
                 size_after = website.content_length_after
                 if size_after < 5: # empty file but is binary coded with endline)
@@ -86,31 +97,36 @@ class convert(commands.Cog):
                     await error_reaction(ctx)
                     return
                 elif size_after > 10485760: # 10MB
-                    # Lower resolution if it is higher than 480p
-                    await status_message.edit(content=f"🔄 File too large ({convert_size(size_after)}). Trying to lower resolution..")
-                    _, height = website.resolution
+                    try: # Encaplusate all compression errors here
+                        # Lower resolution if it is higher than 480p
+                        await status_message.edit(content=f"🔄 File too large ({convert_size(size_after)}). Trying to lower resolution..")
+                        _, height = website.resolution
 
-                    # If video is higher than 720p, lower it to 720p
-                    if height > 720: 
-                        website.lower_resolution(720)
-                    # Otherwise, lower it to 480p. If it is already 480p, it will not change anything
-                    else:
-                        website.lower_resolution(480)
+                        # If video is higher than 720p, lower it to 720p
+                        if height > 720: 
+                            await website.lower_resolution(720)
+                        # Otherwise, lower it to 480p. If it is already 480p, it will not change anything
+                        else:
+                            await website.lower_resolution(480)
 
-                    if website.content_length_after > 10485760:
-                        # Try compressing with increasing levels
-                        await status_message.edit(content=f"🔄 File too large ({convert_size(size_after)}). Trying light compression...")
-                        website.compress_video_light()
-                    
-                    if website.content_length_after > 10485760:
-                        await status_message.edit(content=f"🔄 Light compression insufficient ({convert_size(size_after)}). Trying medium compression...")
-                        website.compress_video_medium()
-
+                        if website.content_length_after > 10485760:
+                            # Try compressing with increasing levels
+                            await status_message.edit(content=f"🔄 File too large ({convert_size(size_after)}). Trying light compression...")
+                            await website.compress_video_light()
                         
-                        size_after = website.content_length_after
-                        if size_after > 10485760:
+                        if website.content_length_after > 10485760:
+                            await status_message.edit(content=f"🔄 Light compression insufficient ({convert_size(size_after)}). Trying medium compression...")
+                            await website.compress_video_medium()
+
+                        if website.content_length_after > 10485760:
                             await status_message.edit(content=f"🔄 Medium compression insufficient ({convert_size(size_after)}). Trying maximum compression...")
-                            website.compress_video_maximum()
+                            await website.compress_video_maximum()
+
+                    except Exception as e:
+                        await status_message.edit(content="❌ Compression failed!")
+                        await error_reaction(ctx)
+                        logger.error(e)
+                        return
                 
                 # Check for size after compressing
                 size_after = website.content_length_after
@@ -143,7 +159,7 @@ class convert(commands.Cog):
             finally:
                 if delete:
                     await ctx.message.delete()
-                # remove temp files whatever happens
+                # Delete all temp files
                 website.cleanup()
 
 

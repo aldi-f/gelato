@@ -1,6 +1,7 @@
 import ffmpeg
 import logging
 import tempfile
+import asyncio
 
 from bs4 import BeautifulSoup
 from yt_dlp import YoutubeDL
@@ -29,15 +30,33 @@ class NineGAG(Base):
             foo.download([self.download_url])
 
 
-    def convert_video(self):
+    async def convert_video(self):
         input_file = self.output_path[-1]
         with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
             output_name = temp_file.name
             self.output_path.append(output_name)
 
-        (ffmpeg
-        .input(input_file)
-        .output(output_name, f='mp4', vcodec=self._ffmpeg_codec)
-        .overwrite_output()
-        .run())
+        try:
+            cmd = [
+                'ffmpeg',
+                '-i', input_file,
+                '-vcodec', self._ffmpeg_codec,
+                '-y',
+                output_name
+            ]
 
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+
+            stdout, stderr = await process.communicate()
+
+            if process.returncode != 0:
+                print(f"FFmpeg error occurred: {stderr.decode()}")
+                raise Exception('FFmpeg failed', stderr.decode())
+
+        except Exception as e:
+            print(f"Error during conversion: {str(e)}")
+            raise

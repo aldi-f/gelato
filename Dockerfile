@@ -1,14 +1,15 @@
 FROM python:3.12-slim-bookworm
 
-RUN apt -y update && apt install -y wget
-    
-RUN wget http://apt.undo.it:7241/apt.undo.it.asc -O /etc/apt/trusted.gpg.d/apt.undo.it.asc
-RUN echo "deb http://apt.undo.it:7241/debian bookworm main" | tee /etc/apt/sources.list.d/apt.undo.it.list
+ARG ARCH=arm64
+ARG FFMPEG_VERSION=7.0.2-7
 
-RUN apt -y update
-RUN apt install -y\
-    ffmpeg-v4l2request\
-    python3-pip
+
+RUN apt -y update && apt install -y wget
+RUN wget \
+    https://github.com/jellyfin/jellyfin-ffmpeg/releases/download/v${FFMPEG_VERSION}/jellyfin-ffmpeg7_${FFMPEG_VERSION}-bookworm_${ARCH}.deb \
+    && dpkg -i jellyfin-ffmpeg7_${FFMPEG_VERSION}-bookworm_${ARCH}.deb
+
+RUN apt install -y python3-pip
 
 WORKDIR /tmp
 

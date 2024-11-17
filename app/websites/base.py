@@ -3,14 +3,19 @@ import requests
 import logging
 import ffmpeg
 import tempfile
-
+import asyncio
 from abc import ABC, abstractmethod
+from urllib.parse import urlparse
 
 FFMPEG_CODEC = os.getenv("FFMPEG_CODEC", "libx264")
 logger = logging.getLogger(__name__)
 
 class Base(ABC):
     def __init__(self, url: str):
+        # Validate URL
+        parsed = urlparse(url)
+        if not parsed.scheme or not parsed.netloc:
+            raise ValueError(f"Invalid URL: {url}")
         self.url = url
         self.downloaded = False
         self.output_path = []
@@ -71,12 +76,12 @@ class Base(ABC):
     def download_video(self):
         pass
 
-    def convert_video(self):
+    async def convert_video(self):
         pass
 
-    def lower_resolution(self, new_height: int):
+    async def lower_resolution(self, new_height: int):
         """
-        Lower the resolution of the video to specified height
+        Lower the resolution of the video to specified height asynchronously
         """
         input_file = self.output_path[-1]
         current_width, current_height = self.resolution
@@ -87,29 +92,37 @@ class Base(ABC):
                 output_name = temp_file.name
                 self.output_path.append(output_name)
             
-            new_width = int((current_width * current_height) / new_height)
-            new_width = new_width - (new_width % 2)
+            aspect_ratio = current_width / current_height
+            new_width = int(new_height * aspect_ratio)
+            new_width = new_width - (new_width % 2) 
             vf = f'scale={new_width}:{new_height}'
 
-            try:
-                (ffmpeg
-                .input(input_file)
-                .output(output_name,
-                        f='mp4',
-                        vcodec=self._ffmpeg_codec,
-                        crf=28,
-                        vf=vf,
-                        acodec='aac',
-                        audio_bitrate='96k')
-                .overwrite_output()
-                .run(capture_stdout=True, capture_stderr=True))
-            except ffmpeg.Error as e:
-                print(f"FFmpeg error occurred: {e.stderr.decode()}")
-                raise
+            cmd = [
+                'ffmpeg',
+                '-i', input_file,
+                '-f', 'mp4',
+                '-vcodec', self._ffmpeg_codec,
+                '-crf', '26',
+                '-vf', vf,
+                '-acodec', 'copy',
+                '-y',
+                output_name
+            ]
 
-    def compress_video_light(self):
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await process.communicate()
+
+            if process.returncode != 0:
+                raise Exception(f"FFmpeg error: {stderr.decode()}")
+
+
+    async def compress_video_light(self):
         """
-        Compress the video with light compression
+        Compress the video with light compression (async version)
         """
         input_file = self.output_path[-1]
         target_size_bytes = 10 * 1024 * 1024  # 10MB
@@ -123,25 +136,43 @@ class Base(ABC):
         target_bitrate = int((target_size_bytes * 8) / duration * 0.95)
 
         try:
-            (ffmpeg
-            .input(input_file)
-            .output(output_name,
-                    f='mp4',
-                    vcodec=self._ffmpeg_codec,
-                    crf=28,
-                    maxrate=f'{target_bitrate}',
-                    bufsize=f'{target_bitrate//2}',
-                    acodec='aac',
-                    audio_bitrate='96k')
-            .overwrite_output()
-            .run(capture_stdout=True, capture_stderr=True))
-        except ffmpeg.Error as e:
-            print(f"FFmpeg error occurred: {e.stderr.decode()}")
+            # Construct ffmpeg command
+            cmd = [
+                'ffmpeg',
+                '-i', input_file,
+                '-vcodec', self._ffmpeg_codec,
+                '-crf', '26',
+                '-maxrate', str(target_bitrate),
+                '-bufsize', str(target_bitrate//2),
+                '-acodec', 'copy',
+                '-y',  # Overwrite output
+                output_name
+            ]
+
+            # Create and run subprocess
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+
+            # Wait for the subprocess to complete
+            stdout, stderr = await process.communicate()
+
+            if process.returncode != 0:
+                print(f"FFmpeg error occurred: {stderr.decode()}")
+                raise Exception('FFmpeg failed', stderr.decode())
+
+        except Exception as e:
+            print(f"Error during compression: {str(e)}")
             raise
 
-    def compress_video_medium(self):
+    async def compress_video_medium(self):
+        """
+        Compress the video with medium compression (async version)
+        """
         input_file = self.output_path[-1]
-        target_size_bytes = 10 * 1024 * 1024
+        target_size_bytes = 10 * 1024 * 1024  # 10MB
         
         with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
             output_name = temp_file.name
@@ -152,24 +183,40 @@ class Base(ABC):
         target_bitrate = int((target_size_bytes * 8) / duration * 0.95)
 
         try:
-            (ffmpeg
-            .input(input_file)
-            .output(output_name,
-                    f='mp4',
-                    vcodec=self._ffmpeg_codec,
-                    crf=32,
-                    maxrate=f'{target_bitrate}',
-                    bufsize=f'{target_bitrate//2}',
-                    preset='slow',
-                    acodec='aac',
-                    audio_bitrate='64k')
-            .overwrite_output()
-            .run(capture_stdout=True, capture_stderr=True))
-        except ffmpeg.Error as e:
-            print(f"FFmpeg error occurred: {e.stderr.decode()}")
+            cmd = [
+                'ffmpeg',
+                '-i', input_file,
+                '-vcodec', self._ffmpeg_codec,
+                '-crf', '28',
+                '-maxrate', str(target_bitrate),
+                '-bufsize', str(target_bitrate//2),
+                '-preset', 'slow',
+                '-acodec', 'copy',
+                '-y',  # Overwrite output
+                output_name
+            ]
+
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+
+            # Wait for the subprocess to complete
+            stdout, stderr = await process.communicate()
+
+            if process.returncode != 0:
+                print(f"FFmpeg error occurred: {stderr.decode()}")
+                raise Exception('FFmpeg failed', stderr.decode())
+
+        except Exception as e:
+            print(f"Error during compression: {str(e)}")
             raise
 
-    def compress_video_maximum(self):
+    async def compress_video_maximum(self):
+        """
+        Compress the video with maximum compression (async version)
+        """
         input_file = self.output_path[-1]
         target_size_bytes = 10 * 1024 * 1024
 
@@ -182,22 +229,35 @@ class Base(ABC):
         target_bitrate = int((target_size_bytes * 8) / duration * 0.95)
 
         try:
-            (ffmpeg
-            .input(input_file)
-            .output(output_name,
-                    f='mp4',
-                    vcodec=self._ffmpeg_codec,
-                    crf=35,
-                    maxrate=f'{target_bitrate}',
-                    bufsize=f'{target_bitrate//2}',
-                    preset='veryslow',
-                    acodec='aac',
-                    audio_bitrate='32k',
-                    s='854x480')
-            .overwrite_output()
-            .run(capture_stdout=True, capture_stderr=True))
-        except ffmpeg.Error as e:
-            print(f"FFmpeg error occurred: {e.stderr.decode()}")
+            cmd = [
+                'ffmpeg',
+                '-i', input_file,
+                '-vcodec', self._ffmpeg_codec,
+                '-crf', '35',
+                '-maxrate', str(target_bitrate),
+                '-bufsize', str(target_bitrate//2),
+                '-preset', 'veryslow',
+                '-acodec', 'aac',
+                '-b:a', '96k',
+                '-s', '854x480',
+                '-y',
+                output_name
+            ]
+
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+
+            stdout, stderr = await process.communicate()
+
+            if process.returncode != 0:
+                print(f"FFmpeg error occurred: {stderr.decode()}")
+                raise Exception('FFmpeg failed', stderr.decode())
+
+        except Exception as e:
+            print(f"Error during compression: {str(e)}")
             raise
 
 
