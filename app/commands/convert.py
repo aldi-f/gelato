@@ -32,6 +32,7 @@ class convert(commands.Cog):
             status_message = await ctx.send("🔍 Checking URL...")
             
             reply_to = None
+            delete = False
             mention_message = ""
             title = ""
 
@@ -132,12 +133,16 @@ class convert(commands.Cog):
                 else:
                     await ctx.send(f"Conversion for {ctx.author.mention}\n{convert_size(size_after)}{mention_message}{title}",file=video, mention_author=False)
 
+                delete = True
                 await status_message.edit(content="✅ Conversion complete!", delete_after=5)
+
             except Exception as e:
                 await status_message.edit(content="❌ Process failed!")
                 await error_reaction(ctx)
                 logger.error(e)
             finally:
+                if delete:
+                    await ctx.message.delete()
                 # remove temp files whatever happens
                 website.cleanup()
 
