@@ -5,7 +5,6 @@ import ffmpeg
 import tempfile
 
 from abc import ABC, abstractmethod
-from pydantic import HttpUrl
 
 FFMPEG_CODEC = os.getenv("FFMPEG_CODEC", "libx264")
 logger = logging.getLogger(__name__)
