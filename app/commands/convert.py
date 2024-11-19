@@ -112,19 +112,22 @@ class convert(commands.Cog):
                             # Otherwise, lower it to 480p. If it is already 480p, it will not change anything
                             #else:
                             #    await website.lower_resolution(480)
-
-                            if website.content_length_after > 10485760:
+                            
+                            if size_after > 10485760:
                                 # Try compressing with increasing levels
                                 await status_message.edit(content=f"🔄 File too large ({convert_size(size_after)}). Trying light compression...")
                                 await website.compress_video_light()
+                                size_after = website.content_length_after
                             
-                            if website.content_length_after > 10485760:
+                            if size_after > 10485760:
                                 await status_message.edit(content=f"🔄 Light compression insufficient ({convert_size(size_after)}). Trying medium compression...")
                                 await website.compress_video_medium()
+                                size_after = website.content_length_after
 
-                            if website.content_length_after > 10485760:
+                            if size_after > 10485760:
                                 await status_message.edit(content=f"🔄 Medium compression insufficient ({convert_size(size_after)}). Trying maximum compression...")
                                 await website.compress_video_maximum()
+                                size_after = website.content_length_after
 
                         except Exception as e:
                             await status_message.edit(content="❌ Compression failed!")
