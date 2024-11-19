@@ -1,23 +1,17 @@
 FROM python:3.12-slim-bookworm
 
-ARG ARCH=arm64
-ARG FFMPEG_VERSION=7.0.2-7
-
-
-RUN apt -y update && apt install -y wget
-RUN wget \
-    https://github.com/jellyfin/jellyfin-ffmpeg/releases/download/v${FFMPEG_VERSION}/jellyfin-ffmpeg7_${FFMPEG_VERSION}-bookworm_${ARCH}.deb \
-    && dpkg -i jellyfin-ffmpeg7_${FFMPEG_VERSION}-bookworm_${ARCH}.deb
-
-RUN apt install -y python3-pip
-
-WORKDIR /tmp
+RUN apt -y update && apt install -y python3-pip
 
 COPY requirements.txt .
 
 RUN python3 -m pip install  -r requirements.txt --user 
 
 COPY ./app /app
+
+FROM gelato-ffmpeg:latest as ffmpeg-builder
+
+COPY --from=builder /dist/ /usr/local/ffmpeg/
+ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/ffmpeg/lib:/usr/local/ffmpeg/lib64:/usr/local/ffmpeg/lib/aarch64-linux-gnu"
 
 WORKDIR /app
 
