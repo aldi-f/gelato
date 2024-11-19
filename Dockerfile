@@ -1,17 +1,12 @@
-FROM python:3.12-slim-bookworm
+FROM python:3.12-bookworm
 
-RUN apt -y update && apt install -y python3-pip
+RUN apt -y update && apt install -y python3-pip ffmpeg
 
 COPY requirements.txt .
 
 RUN python3 -m pip install  -r requirements.txt --user 
 
 COPY ./app /app
-
-FROM gelato-ffmpeg:latest as ffmpeg-builder
-
-COPY --from=builder /dist/ /usr/local/ffmpeg/
-ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/ffmpeg/lib:/usr/local/ffmpeg/lib64:/usr/local/ffmpeg/lib/aarch64-linux-gnu"
 
 WORKDIR /app
 

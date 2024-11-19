@@ -5,8 +5,8 @@ services:
     restart: unless-stopped
     build:
       context: .
-    environment:
-      - FFMPEG_CODEC=h264_v4lm2m2
+#    environment:
+#      - FFMPEG_CODEC=h264_v4lm2m2
     volumes:
       # - db_data:/data
       # mount /tmp on ram to save read/writes
