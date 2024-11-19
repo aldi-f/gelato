@@ -103,15 +103,15 @@ class convert(commands.Cog):
                     elif size_after > 10485760: # 10MB
                         try: # Encaplusate all compression errors here
                             # Lower resolution if it is higher than 480p
-                            await status_message.edit(content=f"🔄 File too large ({convert_size(size_after)}). Trying to lower resolution..")
-                            _, height = website.resolution
+                           # await status_message.edit(content=f"🔄 File too large ({convert_size(size_after)}). Trying to lower resolution..")
+                           # _, height = website.resolution
 
                             # If video is higher than 720p, lower it to 720p
-                            if height > 720: 
-                                await website.lower_resolution(720)
+                            #if height > 720: 
+                            #    await website.lower_resolution(720)
                             # Otherwise, lower it to 480p. If it is already 480p, it will not change anything
-                            else:
-                                await website.lower_resolution(480)
+                            #else:
+                            #    await website.lower_resolution(480)
 
                             if website.content_length_after > 10485760:
                                 # Try compressing with increasing levels
