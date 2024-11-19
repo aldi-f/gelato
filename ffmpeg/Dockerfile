@@ -1,5 +1,12 @@
 FROM debian:bookworm-slim
 
+SHELL ["/bin/bash", "-c"]
+
+RUN echo "deb-src http://deb.debian.org/debian bookworm main" >> /etc/apt/sources.list && \
+    echo "deb-src http://security.debian.org/debian-security bookworm-security main" >> /etc/apt/sources.list && \
+    echo "deb-src http://deb.debian.org/debian bookworm-updates main" >> /etc/apt/sources.list
+
+
 RUN apt-get update && apt-get install -y \
     build-essential \
     git \
@@ -11,10 +18,8 @@ WORKDIR /build
 RUN git clone --branch test/5.1.4/main https://github.com/jc-kynesim/rpi-ffmpeg.git
 
 WORKDIR /build/rpi-ffmpeg
-RUN ./pi-util/conf_native.sh && \
-    make -j$(nproc) -C out/*/install && \
-    cp -r out/*/install/* /usr && \
-    ./pi-util/clean_usr_libs.sh
+RUN ./pi-util/conf_native.sh
+RUN make -j$(nproc) -C out/arm64--5.1.4-shared-rel install
 
 RUN mkdir -p /dist && \
     cp -r out/*/install/* /dist/
