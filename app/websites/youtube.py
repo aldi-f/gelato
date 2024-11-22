@@ -24,6 +24,16 @@ class Youtube(Base):
 
         return info.get("filesize",0) or info.get("filesize_approx",0)    
 
+    @property
+    def title(self) -> str:
+        """
+        Title of the video
+        """
+        with YoutubeDL(self.yt_params) as ydl:
+            info = ydl.extract_info(self.download_url, download=False) or {}
+
+        return info.get("title","")
+    
     def download_video(self):
         with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
             output_name = temp_file.name

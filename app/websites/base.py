@@ -72,6 +72,14 @@ class Base(ABC):
             return width, height
         raise ValueError("Output path is empty")
 
+
+    @property
+    def title(self) -> str:
+        """
+        Title of the video
+        """
+        return ""
+
     @abstractmethod
     def download_video(self):
         pass

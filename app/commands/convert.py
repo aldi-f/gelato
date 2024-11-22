@@ -36,7 +36,6 @@ class convert(commands.Cog):
             reply_to = None
             delete = False
             mention_message = ""
-            title = ""
 
             if ctx.message.reference:
                 reply_to = await ctx.fetch_message(ctx.message.reference.message_id)
@@ -152,9 +151,9 @@ class convert(commands.Cog):
                     # TODO: database path
 
                     if reply_to:
-                        await reply_to.reply(f"Conversion for {ctx.author.mention}\n{convert_size(size_after)}{mention_message}{title}",file=video, mention_author=False)
+                        await reply_to.reply(f"Conversion for {ctx.author.mention}\n{convert_size(size_after)}{mention_message}\n`{website.title}`",file=video, mention_author=False)
                     else:
-                        await ctx.send(f"Conversion for {ctx.author.mention}\n{convert_size(size_after)}{mention_message}{title}",file=video, mention_author=False)
+                        await ctx.send(f"Conversion for {ctx.author.mention}\n{convert_size(size_after)}{mention_message}\n`{website.title}`",file=video, mention_author=False)
 
                     delete = True
                     await status_message.edit(content="✅ Conversion complete!", delete_after=5)
