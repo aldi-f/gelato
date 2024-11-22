@@ -64,7 +64,7 @@ class convert(commands.Cog):
 
             # Check for size before downloading
             size_before = website.content_length_before
-            if size_before == 0 or size_before > 1048576000:
+            if size_before == 0 or size_before > 104857600:
                 await error_reaction(ctx,f"File either empty or too big ({convert_size(size_before)})")
                 return
         
