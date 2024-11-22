@@ -269,3 +269,9 @@ class Base(ABC):
     def cleanup(self):
         for path in self.output_path:
             os.remove(path)
+            
+            # If videos failed without downloading
+            try:
+                os.remove(path + ".part")
+            except FileNotFoundError:
+                pass
