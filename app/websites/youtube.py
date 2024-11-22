@@ -9,12 +9,14 @@ from websites.base import Base
 
 class Youtube(Base):
     _ffmpeg_codec = "libx264"
-    yt_params: dict[str,bool|str|int] = {
+    yt_params = {
         "quiet": True,
         "no_warnings": True,
         "geo_bypass": True,
         "overwrites": True,
-        "format": "bv*+ba/b"
+        "format_sort": ["size:10M", "ext:mp4:m4a", "vcodec:h264"],
+        # "format": "bv*+ba/b",
+
     }
 
     @property
