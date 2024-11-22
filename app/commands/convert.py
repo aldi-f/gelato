@@ -151,9 +151,9 @@ class convert(commands.Cog):
                     # TODO: database path
 
                     if reply_to:
-                        await reply_to.reply(f"Conversion for {ctx.author.mention}\n{convert_size(size_after)}{mention_message}\n`{website.title}`",file=video, mention_author=False)
+                        await reply_to.reply(f"Conversion for {ctx.author.mention}\n{convert_size(size_after)}{mention_message}{website.title}",file=video, mention_author=False)
                     else:
-                        await ctx.send(f"Conversion for {ctx.author.mention}\n{convert_size(size_after)}{mention_message}\n`{website.title}`",file=video, mention_author=False)
+                        await ctx.send(f"Conversion for {ctx.author.mention}\n{convert_size(size_after)}{mention_message}{website.title}",file=video, mention_author=False)
 
                     delete = True
                     await status_message.edit(content="✅ Conversion complete!", delete_after=5)

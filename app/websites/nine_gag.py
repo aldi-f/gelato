@@ -19,6 +19,21 @@ class NineGAG(Base):
     }
     convert_to_mp4 = True
     
+
+
+    @property
+    def title(self) -> str:
+        try:
+            page_url = "https://9gag.com/gag"
+            video_id = self.url.split('/')[-1].split('_')[0]
+            with YoutubeDL(self.yt_params) as foo:
+                info = foo.extract_info(f"{page_url}/{video_id}", download=False) or {}
+            return "\n`" + info.get("title", "") + "`"
+        except Exception as e:
+            logger.error(e)
+            return ""
+
+
     def download_video(self):
         with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
             output_name = temp_file.name

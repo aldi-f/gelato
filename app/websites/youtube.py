@@ -32,7 +32,7 @@ class Youtube(Base):
         with YoutubeDL(self.yt_params) as ydl:
             info = ydl.extract_info(self.download_url, download=False) or {}
 
-        return info.get("title","")
+        return "\n`" + info.get("title", "") + "`"
     
     def download_video(self):
         with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
