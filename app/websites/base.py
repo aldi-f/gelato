@@ -247,7 +247,6 @@ class Base(ABC):
                 '-preset', 'veryslow',
                 '-acodec', 'aac',
                 '-b:a', '96k',
-                '-s', '854x480',
                 '-y',
                 output_name
             ]
