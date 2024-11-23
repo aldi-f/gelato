@@ -3,7 +3,6 @@ import logging
 import tempfile
 import asyncio
 
-from bs4 import BeautifulSoup
 from yt_dlp import YoutubeDL
 
 from websites.base import Base
@@ -17,7 +16,10 @@ class NineGAG(Base):
         "geo_bypass": True,
         "overwrites": True,
     }
-    convert_to_mp4 = True
+    
+    def __init__(self, url: str):
+        super().__init__(url)
+        self.convert_to_mp4 = True
 
     @property
     def title(self) -> str:
