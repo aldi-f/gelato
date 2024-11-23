@@ -18,8 +18,6 @@ class NineGAG(Base):
         "overwrites": True,
     }
     convert_to_mp4 = True
-    
-
 
     @property
     def title(self) -> str:

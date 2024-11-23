@@ -47,14 +47,19 @@ class convert(commands.Cog):
             try: 
                 if is_9gag_url(url):
                     website = NineGAG(url)
+                    logger.info("9gag")
                 elif is_twitter_url(url):
                     website = Twitter(url)
+                    logger.info("twitter")
                 elif is_youtube_url(url):
                     website = Youtube(url)
+                    logger.info("youtube")
                 elif is_instagram_reels_url(url):
                     website = Instagram(url)
+                    logger.info("instagram")
                 else:
                     website = Generic(url)
+                    logger.info("generic")
             except Exception as e:
                 await status_message.edit(content="❌ Invalid URL!")
                 await error_reaction(ctx)
