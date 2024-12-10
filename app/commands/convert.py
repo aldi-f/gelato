@@ -6,6 +6,7 @@ import asyncio
 
 from utils import is_9gag_url, is_youtube_url, is_instagram_reels_url, is_twitter_url, convert_size
 from websites import Generic, Youtube, NineGAG, Instagram, Twitter
+from websites.base import RestrictedVideo
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +80,10 @@ class convert(commands.Cog):
                     try:
                         await status_message.edit(content="⬇️ Downloading video...")
                         website.download_video()
+                    except RestrictedVideo:
+                        await status_message.edit(content="❌ Video is restricted!")
+                        await error_reaction(ctx)
+                        return
                     except Exception as e:
                         await status_message.edit(content="❌ Download failed!")
                         await error_reaction(ctx)
@@ -97,6 +102,7 @@ class convert(commands.Cog):
                     # Check for size after converting
                     size_after = website.content_length_after
                     if size_after < 5: # empty file but is binary coded with endline)
+                        logger.error(f"Empty file: {website.output_path[-1]}")
                         await status_message.edit(content="❌ Conversion failed!")
                         await error_reaction(ctx)
                         return
@@ -170,7 +176,7 @@ class convert(commands.Cog):
                 finally:
                     if delete:
                         await ctx.message.delete()
-                    # Delete all temp files
+                    # # Delete all temp files
                     website.cleanup()
 
 

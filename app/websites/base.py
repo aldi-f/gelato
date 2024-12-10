@@ -1,4 +1,5 @@
 import os
+import glob
 import requests
 import logging
 import ffmpeg
@@ -9,6 +10,11 @@ from urllib.parse import urlparse
 
 FFMPEG_CODEC = os.getenv("FFMPEG_CODEC", "libx264")
 logger = logging.getLogger(__name__)
+
+
+class RestrictedVideo(Exception):
+    pass
+
 
 class Base(ABC):
     def __init__(self, url: str):
@@ -275,10 +281,12 @@ class Base(ABC):
 
     def cleanup(self):
         for path in self.output_path:
-            os.remove(path)
+            base_path = os.path.splitext(path)[0]
             
-            # If videos failed without downloading
-            try:
-                os.remove(path + ".part")
-            except FileNotFoundError:
-                pass
+            matching_files = glob.glob(f"{base_path}.*")
+            
+            for file in matching_files:
+                try:
+                    os.remove(file)
+                except FileNotFoundError:
+                    pass

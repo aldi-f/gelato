@@ -3,7 +3,7 @@ import json
 import requests
 import tempfile
 
-from websites.base import Base
+from websites.base import Base, RestrictedVideo
 
 def find_reel_id(url:str):
     pattern = r'https?://(?:www\.)?instagram\.com/(?:reel|p)/([^/?]+)'
@@ -22,6 +22,8 @@ def get_reel_video_url(url:str):
 
     response = requests.post(url, data=payload)
     data = response.json()
+    if not data["data"]["xdt_shortcode_media"]:
+        raise RestrictedVideo("No video found")
     return data['data']['xdt_shortcode_media']['video_url']
 
 
