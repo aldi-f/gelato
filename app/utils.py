@@ -8,6 +8,11 @@ def is_instagram_reels_url(url: str) -> bool:
     match = re.match(pattern, url)
     if match:
         return True
+    # new instagram url format for sharing links
+    pattern = r"https?://(?:www\.)?instagram\.com/share/reel/.*"
+    match = re.match(pattern, url)
+    if match:
+        return True
     return False
 
 def is_9gag_url(url: str) -> bool:
