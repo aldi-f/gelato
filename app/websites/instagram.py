@@ -6,10 +6,15 @@ import tempfile
 from websites.base import Base, RestrictedVideo
 
 def find_reel_id(url:str):
+    # Instagram share link is different from actual video
+    # Redirect fixes it
+    # So catch this to make sure we are pulling the correct one
+    real_url = requests.head(url, allow_redirects=True).url
     pattern = r'https?://(?:www\.)?instagram\.com/(?:reel|p)/([^/?]+)'
-    match = re.search(pattern, url)
+    match = re.search(pattern, real_url)
     if match:
-        return match.group(1)
+        return match.group(1)\
+    
     
 def get_reel_video_url(url:str):
     video_id = find_reel_id(url)
