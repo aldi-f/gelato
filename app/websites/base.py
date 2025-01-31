@@ -139,7 +139,7 @@ class Base(ABC):
         Compress the video with light compression (async version)
         """
         input_file = self.output_path[-1]
-        target_size_bytes = 10 * 1024 * 1024  # 10MB
+        target_size_bytes = 9.5 * 1024 * 1024  # 9.5MB
 
         with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
             output_name = temp_file.name
@@ -186,7 +186,7 @@ class Base(ABC):
         Compress the video with medium compression (async version)
         """
         input_file = self.output_path[-1]
-        target_size_bytes = 10 * 1024 * 1024  # 10MB
+        target_size_bytes = 9.5 * 1024 * 1024  # 9.5MB
         
         with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
             output_name = temp_file.name
@@ -232,7 +232,7 @@ class Base(ABC):
         Compress the video with maximum compression (async version)
         """
         input_file = self.output_path[-1]
-        target_size_bytes = 10 * 1024 * 1024
+        target_size_bytes = 9.5 * 1024 * 1024 # 9.5MB
 
         with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
             output_name = temp_file.name
