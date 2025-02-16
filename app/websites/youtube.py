@@ -14,7 +14,7 @@ class Youtube(Base):
         "no_warnings": True,
         "geo_bypass": True,
         "overwrites": True,
-        "format_sort": ["size:10M", "ext:mp4:m4a", "vcodec:h264"],
+        "format_sort": ["lang:-1", "size:9.5M", "ext:mp4:m4a", "vcodec:h264"],
         # "format": "bv*+ba/b",
     }
 
