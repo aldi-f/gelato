@@ -32,8 +32,3 @@ Create a `.env` file inside app/ folder for the discord token, or pass it as an 
 TOKEN=<discord-token-here>
 ```
 
-
-By default it is not possible to get the download url from the shared link. Beautiful Soup 4 cannot find the url either because the page has to load first.
-For this case we have to use a web browser automation tool like Selenium to open the link, let the page load and then get the actual mp4 content. Then we can proceed to download the video and upload to discord.
-
-
