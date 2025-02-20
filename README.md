@@ -1,9 +1,11 @@
 # Gelato
 
-This is a simple discord bot made to download and convert links into embedable videos for discord.
+This is a simple discord bot made to download and convert links into embeddable videos for discord.
 
 For now this supports: 
 - 9GAG
+- Twitter/X
+- Youtube
 - Instagram reels
 
 ### Running it
