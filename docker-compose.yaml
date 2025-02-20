@@ -1,12 +1,17 @@
 version: '3'
 services:
   gelato:
-    container_name: gelato
+    container_name: gelato-2
     restart: unless-stopped
     build:
       context: .
+#    environment:
+#      - FFMPEG_CODEC=h264_v4lm2m2
     volumes:
-      - db_data:/data
+      # - db_data:/data
+      # mount /tmp on ram to save read/writes
+      - type: tmpfs
+        target: /tmp
 
 volumes:
   db_data:
