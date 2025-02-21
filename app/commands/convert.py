@@ -68,7 +68,17 @@ class convert(commands.Cog):
                 return
 
             # Check for size before downloading
-            size_before = website.content_length_before
+            try:
+                size_before = website.content_length_before
+            except RestrictedVideo:
+                await status_message.edit(content="❌ Video is restricted!")
+                await error_reaction(ctx)
+                return
+            except Exception as e:
+                await status_message.edit(content="❌ Error retrieving video")
+                await error_reaction(ctx)
+                logger.error(e)
+                return
             if size_before == 0 or size_before > 104857600:
                 await error_reaction(ctx,f"File either empty or too big ({convert_size(size_before)})")
                 return

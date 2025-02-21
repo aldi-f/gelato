@@ -2,7 +2,6 @@ import ffmpeg
 import logging
 import tempfile
 
-from bs4 import BeautifulSoup
 from yt_dlp import YoutubeDL
 
 from websites.base import Base
