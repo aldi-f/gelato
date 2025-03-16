@@ -87,11 +87,24 @@ class Base(ABC):
         """
         return ""
 
+    @property
+    def vcodec(self) -> str:
+        """
+        Codec of the video
+        """
+        input_file = self.output_path[-1]
+        probe = ffmpeg.probe(input_file)
+        video_stream = next((s for s in probe['streams'] if s['codec_type'] == 'video'), None)
+        
+        if video_stream and 'codec_name' in video_stream:
+            codec = video_stream['codec_name']
+        else:
+            # Fallback if codec_name isn't available in the probe
+            codec = probe['format']['format_name']
+        return codec
+    
     @abstractmethod
     def download_video(self):
-        pass
-
-    async def convert_video(self):
         pass
 
     def _get_video_bitrate(self, file_path: str) -> int:
@@ -104,6 +117,7 @@ class Base(ABC):
             # Fallback if bit_rate isn't available in the probe
             original_bitrate = int(float(probe['format']['bit_rate'])) 
         return original_bitrate
+    
 
     def _get_required_bitrate(self, file_path: str, target_size_megabytes: float=9) -> int:
         """
@@ -390,6 +404,38 @@ class Base(ABC):
 
         except Exception as e:
             print(f"Error during compression: {str(e)}")
+            raise
+
+    async def convert_video(self):
+        input_file = self.output_path[-1]
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
+            output_name = temp_file.name
+            self.output_path.append(output_name)
+
+        try:
+            cmd = [
+                'ffmpeg',
+                '-i', input_file,
+                '-c:v', FFMPEG_HW_CODEC,
+                '-f', 'mp4',
+                '-y',
+                output_name
+            ]
+
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+
+            stdout, stderr = await process.communicate()
+
+            if process.returncode != 0:
+                print(f"FFmpeg error occurred: {stderr.decode()}")
+                raise Exception('FFmpeg failed', stderr.decode())
+
+        except Exception as e:
+            print(f"Error during conversion: {str(e)}")
             raise
 
 

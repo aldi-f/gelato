@@ -102,7 +102,7 @@ class convert(commands.Cog):
                         logger.error(e)
                         return
                     # Convert to mp4 if needed
-                    if website.convert_to_mp4:
+                    if "h264" not in website.vcodec or website.convert_to_mp4:
                         await status_message.edit(content="⚙️ Converting video...")
                         try:
                             await website.convert_video()
