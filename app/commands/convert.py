@@ -190,7 +190,7 @@ class convert(commands.Cog):
                     # TODO: database path
                     end = time.time()
                     # convert time to seconds 
-                    elapsed = end - start
+                    elapsed = int(end - start)
                     logger.info(f"Total time: {elapsed} seconds")
                     if reply_to:
                         await reply_to.reply(f"Conversion for {ctx.author.mention}\n[{elapsed} seconds]\n{convert_size(size_after)}{mention_message}{website.title}",file=video, mention_author=False)
