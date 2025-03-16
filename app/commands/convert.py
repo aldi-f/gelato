@@ -3,6 +3,7 @@ import logging
 from discord.ext import commands
 import discord
 import asyncio
+import time
 
 from utils import is_9gag_url, is_youtube_url, is_instagram_reels_url, is_twitter_url, convert_size
 from websites import Generic, Youtube, NineGAG, Instagram, Twitter
@@ -37,6 +38,7 @@ class convert(commands.Cog):
             reply_to = None
             delete = False
             mention_message = ""
+            start = time.time()
 
             if ctx.message.reference:
                 reply_to = await ctx.fetch_message(ctx.message.reference.message_id)
@@ -123,29 +125,45 @@ class convert(commands.Cog):
                     elif size_after > 10485760: # 10MB
                         try: # Encaplusate all compression errors here
                             # Lower resolution if it is higher than 480p
-                           # await status_message.edit(content=f"🔄 File too large ({convert_size(size_after)}). Trying to lower resolution..")
-                           # _, height = website.resolution
 
                             # If video is higher than 720p, lower it to 720p
-                            #if height > 720: 
-                            #    await website.lower_resolution(720)
-                            # Otherwise, lower it to 480p. If it is already 480p, it will not change anything
-                            #else:
-                            #    await website.lower_resolution(480)
-                            
+                            _, height = website.resolution
+                            if height > 720 or size_after: # 25MB
+                                await status_message.edit(content=f"🔄 File too large ({convert_size(size_after)}) but resolution is over 720p. Lowering to 720p...")
+                                await website.lower_resolution(720)
+                                size_after = website.content_length_after
+
+                            # For files bigger than 25MB, lower to 480p
+                            if size_after  > 10485760 * 2.5 and height > 480: # 25MB
+                                await status_message.edit(content=f"🔄 File too large ({convert_size(size_after)}). Lowering to 480p...")
+                                await website.lower_resolution(480)
+                                size_after = website.content_length_after
+
+                            # Firstly we try simple hardware compression
                             if size_after > 10485760:
-                                # Try compressing with increasing levels
-                                await status_message.edit(content=f"🔄 File too large ({convert_size(size_after)}). Trying light compression...")
+                                await status_message.edit(content=f"🔄 File too large ({convert_size(size_after)}). Trying hardware compression...")
+                                await website.compress_video_hardware_light()
+                                size_after = website.content_length_after
+
+                            # Try again with hardware compression but lower bitrate
+                            if size_after > 10485760:
+                                await status_message.edit(content=f"🔄 Light hardware compression insufficient ({convert_size(size_after)}). Trying medium hardware compression...")
+                                await website.compress_video_hardware_medium()
+                                size_after = website.content_length_after
+
+                            # Then try 3 levels of software compression
+                            if size_after > 10485760:
+                                await status_message.edit(content=f"🔄 Medium hardware compression insufficient({convert_size(size_after)}). Trying light software compression...")
                                 await website.compress_video_light()
                                 size_after = website.content_length_after
-                            
+
                             if size_after > 10485760:
-                                await status_message.edit(content=f"🔄 Light compression insufficient ({convert_size(size_after)}). Trying medium compression...")
+                                await status_message.edit(content=f"🔄 Light compression insufficient ({convert_size(size_after)}). Trying medium software compression...")
                                 await website.compress_video_medium()
                                 size_after = website.content_length_after
 
                             if size_after > 10485760:
-                                await status_message.edit(content=f"🔄 Medium compression insufficient ({convert_size(size_after)}). Trying maximum compression...")
+                                await status_message.edit(content=f"🔄 Medium compression insufficient ({convert_size(size_after)}). Trying maximum software compression...")
                                 await website.compress_video_maximum()
                                 size_after = website.content_length_after
 
@@ -170,11 +188,14 @@ class convert(commands.Cog):
                     video = discord.File(website.output_path[-1], filename="output.mp4")
 
                     # TODO: database path
-
+                    end = time.time()
+                    # convert time to seconds 
+                    elapsed = end - start
+                    logger.info(f"Total time: {elapsed} seconds")
                     if reply_to:
-                        await reply_to.reply(f"Conversion for {ctx.author.mention}\n{convert_size(size_after)}{mention_message}{website.title}",file=video, mention_author=False)
+                        await reply_to.reply(f"Conversion for {ctx.author.mention}\n[{elapsed} seconds]\n{convert_size(size_after)}{mention_message}{website.title}",file=video, mention_author=False)
                     else:
-                        await ctx.send(f"Conversion for {ctx.author.mention}\n{convert_size(size_after)}{mention_message}{website.title}",file=video, mention_author=False)
+                        await ctx.send(f"Conversion for {ctx.author.mention}\n[{elapsed} seconds]\n{convert_size(size_after)}{mention_message}{website.title}",file=video, mention_author=False)
 
                     delete = True
                     await status_message.edit(content="✅ Conversion complete!", delete_after=5)

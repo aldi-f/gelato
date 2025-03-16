@@ -1,7 +1,6 @@
 version: '3'
 services:
   gelato:
-    container_name: gelato-2
     restart: unless-stopped
     build:
       context: .
@@ -12,6 +11,8 @@ services:
       # mount /tmp on ram to save read/writes
       - type: tmpfs
         target: /tmp
+    devices:
+      - /dev/dri:/dev/dri
 
 volumes:
   db_data:
