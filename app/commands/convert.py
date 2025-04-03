@@ -81,6 +81,11 @@ class convert(commands.Cog):
                 await error_reaction(ctx)
                 logger.exception(e)
                 return
+            
+            if size_before is None:
+                await status_message.edit(content="❌ Error getting video size")
+                await error_reaction(ctx)
+                return
             if size_before == 0 or size_before > 104857600:
                 await error_reaction(ctx,f"File either empty or too big ({convert_size(size_before)})")
                 return
