@@ -66,7 +66,7 @@ class convert(commands.Cog):
             except Exception as e:
                 await status_message.edit(content="❌ Invalid URL!")
                 await error_reaction(ctx)
-                logger.error(e)
+                logger.exception(e)
                 return
 
             # Check for size before downloading
@@ -79,7 +79,7 @@ class convert(commands.Cog):
             except Exception as e:
                 await status_message.edit(content="❌ Error retrieving video")
                 await error_reaction(ctx)
-                logger.error(e)
+                logger.exception(e)
                 return
             if size_before == 0 or size_before > 104857600:
                 await error_reaction(ctx,f"File either empty or too big ({convert_size(size_before)})")
@@ -99,7 +99,7 @@ class convert(commands.Cog):
                     except Exception as e:
                         await status_message.edit(content="❌ Download failed!")
                         await error_reaction(ctx)
-                        logger.error(e)
+                        logger.exception(e)
                         return
                     # Convert to mp4 if needed
                     if "h264" not in website.vcodec or website.convert_to_mp4:
@@ -109,7 +109,7 @@ class convert(commands.Cog):
                         except Exception as e:
                             await status_message.edit(content="❌ Conversion failed!")
                             await error_reaction(ctx)
-                            logger.error(e)
+                            logger.exception(e)
                             return
                     # Check for size after converting
                     size_after = website.content_length_after
@@ -170,7 +170,7 @@ class convert(commands.Cog):
                         except Exception as e:
                             await status_message.edit(content="❌ Compression failed!")
                             await error_reaction(ctx)
-                            logger.error(e)
+                            logger.exception(e)
                             return
                     
                     # Check for size after compressing
@@ -203,7 +203,7 @@ class convert(commands.Cog):
                 except Exception as e:
                     await status_message.edit(content="❌ Process failed!")
                     await error_reaction(ctx)
-                    logger.error(e)
+                    logger.exception(e)
                 finally:
                     if delete:
                         await ctx.message.delete()
