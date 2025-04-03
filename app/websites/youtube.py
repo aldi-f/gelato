@@ -23,7 +23,12 @@ class Youtube(Base):
         with YoutubeDL(self.yt_params) as ydl:
             info = ydl.extract_info(self.download_url, download=False) or {}
 
-        return info.get("filesize",0) or info.get("filesize_approx",0)    
+        filezize = info.get("filesize", 0) or info.get("filesize_approx", 0)
+        if not filezize:
+            bitrate = info.get("tbr", 0)
+            total_seconds = info.get("duration", 0)
+            filezize = (bitrate * total_seconds) / 8 
+        return filezize   
 
     @property
     def title(self) -> str:
