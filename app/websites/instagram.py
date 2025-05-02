@@ -1,9 +1,12 @@
 import re
 import json
+import logging
 import requests
 import tempfile
 
 from websites.base import Base, RestrictedVideo
+
+logger = logging.getLogger(__name__)
 
 def find_reel_id(url:str):
     # Instagram share link is different from actual video
@@ -13,7 +16,7 @@ def find_reel_id(url:str):
     pattern = r'https?://(?:www\.)?instagram\.com/(?:reel|p)/([^/?]+)'
     match = re.search(pattern, real_url)
     if match:
-        return match.group(1)\
+        return match.group(1)
     
     
 def get_reel_video_url(url:str):
@@ -26,6 +29,7 @@ def get_reel_video_url(url:str):
     }
 
     response = requests.post(url, data=payload)
+    logger.info(response.text)
     data = response.json()
     if not data["data"]["xdt_shortcode_media"]:
         raise RestrictedVideo("No video found")
