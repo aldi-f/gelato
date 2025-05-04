@@ -1,6 +1,6 @@
 import re
 import os
-import asyncio
+import aiohttp
 import logging
 import requests
 import tempfile
@@ -13,11 +13,9 @@ PLAYWRIGHT_HOST = os.getenv("PLAYWRIGHT_HOST", "ws://127.0.0.1:3000/")
 logger = logging.getLogger(__name__)
 
 
-    
-
 class Instagram(Base):
     _download_url = None
-
+    async_download = True
     def find_reel_id(self):
         # Instagram share link is different from actual video
         # Redirect fixes it
@@ -64,18 +62,22 @@ class Instagram(Base):
         return data
 
     @property
-    def download_url(self):
+    async def download_url_async(self):
         if self._download_url is None:
-            loop = asyncio.get_running_loop()
-            task = loop.create_task(self.get_download_url())
-            self._download_url = loop.run_until_complete(asyncio.wait_for(task, timeout=20))
+            self._download_url = await self.get_download_url()
         return self._download_url
 
-    def download_video(self):
+    async def download_video_async(self):
         with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_file:
             output_name = temp_file.name
             self.output_path.append(output_name)
 
+        url = await self.download_url_async
         content = requests.get(self.download_url).content
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                content = await response.read()
+
         with open(output_name, "wb") as file:
             file.write(content)

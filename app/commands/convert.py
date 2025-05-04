@@ -7,7 +7,7 @@ import time
 
 from utils import is_9gag_url, is_youtube_url, is_instagram_reels_url, is_twitter_url, convert_size
 from websites import Generic, Youtube, NineGAG, Instagram, Twitter
-from websites.base import RestrictedVideo
+from websites.base import RestrictedVideo, VideoNotFound
 
 logger = logging.getLogger(__name__)
 
@@ -71,9 +71,10 @@ class convert(commands.Cog):
 
             # Check for size before downloading
             try:
-                size_before = website.content_length_before
-            except RestrictedVideo:
-                await status_message.edit(content="❌ Video is restricted!")
+
+                size_before = website.content_length_before if not website.async_download else await website.content_length_before_async
+            except VideoNotFound:
+                await status_message.edit(content="❌ Video not found!")
                 await error_reaction(ctx)
                 return
             except Exception as e:
@@ -96,7 +97,10 @@ class convert(commands.Cog):
                     # Download the actual video
                     try:
                         await status_message.edit(content="⬇️ Downloading video...")
-                        website.download_video()
+                        if website.async_download:
+                            await website.download_video_async()
+                        else:
+                            website.download_video()
                     except RestrictedVideo:
                         await status_message.edit(content="❌ Video is restricted!")
                         await error_reaction(ctx)
