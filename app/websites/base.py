@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 class RestrictedVideo(Exception):
     pass
 
+class VideoNotFound(Exception):
+    pass
 
 class Base(ABC):
     def __init__(self, url: str):

@@ -1,10 +1,10 @@
-version: '3'
 services:
   gelato:
     restart: unless-stopped
     build:
       context: .
-#    environment:
+    environment:
+      - PLAYWRIGHT_HOST=ws://playwright:3000/
 #      - FFMPEG_CODEC=h264_v4lm2m2
     volumes:
       # - db_data:/data
@@ -13,6 +13,21 @@ services:
         target: /tmp
     devices:
       - /dev/dri:/dev/dri
+    networks:
+      - gelato-net
+
+  playwright:
+    restart: unless-stopped
+    image: mcr.microsoft.com/playwright:v1.52.0-noble
+    ports:
+      - 3000:3000
+    command: npx -y playwright@1.52.0 run-server --port 3000 --host 0.0.0.0
+    networks:
+      - gelato-net
 
 volumes:
   db_data:
+
+networks:
+  gelato-net:
+    driver: bridge
