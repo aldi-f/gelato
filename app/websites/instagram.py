@@ -15,7 +15,11 @@ logger = logging.getLogger(__name__)
 
 class Instagram(Base):
     _download_url = None
-    async_download = True
+
+    def __init__(self, url: str):
+        super().__init__(url)
+        self.async_download = True
+        
     def find_reel_id(self):
         # Instagram share link is different from actual video
         # Redirect fixes it
