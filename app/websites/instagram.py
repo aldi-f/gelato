@@ -67,7 +67,8 @@ class Instagram(Base):
     def download_url(self):
         if self._download_url is None:
             loop = asyncio.get_running_loop()
-            self._download_url = loop.create_task(self.get_download_url()).result()
+            task = loop.create_task(self.get_download_url())
+            self._download_url = loop.run_until_complete(asyncio.wait_for(task, timeout=20))
         return self._download_url
 
     def download_video(self):
