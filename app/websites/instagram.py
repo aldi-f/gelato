@@ -50,6 +50,18 @@ class Instagram(Base):
 
             await page.wait_for_load_state("networkidle")
 
+            retry = 0
+
+            found = False
+            while retry < 5 and not found:
+                for request in results:
+                    if request.get("data") and request["data"].get("xdt_shortcode_media"):
+                        found = True
+                        break
+                if not found:
+                    await page.wait_for_timeout(1000)
+                    retry += 1
+                
             await context.close()
             await browser.close()
 
