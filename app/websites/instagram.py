@@ -76,12 +76,12 @@ class Instagram(Base):
             output_name = temp_file.name
             self.output_path.append(output_name)
 
-        url = await self.download_url_async
-        # content = requests.get(self.download_url).content
+        content = requests.get(await self.download_url_async).content
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=60)) as response:
-                content = await response.read()
+        # TODO: fix this
+        # async with aiohttp.ClientSession() as session:
+        #     async with session.get(await self.download_url_async, timeout=aiohttp.ClientTimeout(total=60)) as response:
+        #         content = await response.read()
 
-                with open(output_name, "wb") as file:
-                    file.write(content)
+        with open(output_name, "wb") as file:
+            file.write(content)
