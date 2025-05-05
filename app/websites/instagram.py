@@ -54,6 +54,7 @@ class Instagram(Base):
             await browser.close()
 
         if len(results) == 0:
+            logger.error("No graphql requests")
             raise VideoNotFound("No video found")
         
         data = None
@@ -62,6 +63,7 @@ class Instagram(Base):
                 continue
             data = result["data"]["xdt_shortcode_media"]["video_url"]
         if not data:
+            logger.error(f"No data: {results=}")
             raise VideoNotFound("No video found")
         return data
 
