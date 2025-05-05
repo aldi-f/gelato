@@ -77,11 +77,11 @@ class Instagram(Base):
             self.output_path.append(output_name)
 
         url = await self.download_url_async
-        content = requests.get(self.download_url).content
+        # content = requests.get(self.download_url).content
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=60)) as response:
                 content = await response.read()
 
-        with open(output_name, "wb") as file:
-            file.write(content)
+                with open(output_name, "wb") as file:
+                    file.write(content)
