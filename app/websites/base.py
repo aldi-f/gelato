@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 class RestrictedVideo(Exception):
     pass
 
+class VideoNotFound(Exception):
+    pass
 
 class Base(ABC):
     def __init__(self, url: str):
@@ -28,9 +30,17 @@ class Base(ABC):
         self.output_path = []
         self._ffmpeg_codec = FFMPEG_CODEC
         self.convert_to_mp4 = False
+        self.async_download = False
 
     @property
     def download_url(self):
+        """
+        URL to download the video from
+        """
+        return self.url
+    
+    @property
+    async def download_url_async(self):
         """
         URL to download the video from
         """
@@ -57,6 +67,13 @@ class Base(ABC):
         head_data = requests.head(self.download_url, allow_redirects=True).headers
         return int(head_data.get("Content-Length", 0))
     
+    @property
+    async def content_length_before_async(self) -> int:
+        """
+        Content length of the video calculated before downloading. Will not be 100% accurate.
+        """
+        head_data = requests.head(await self.download_url_async, allow_redirects=True)
+        return int(head_data.headers.get("Content-Length", 0))
 
     @property
     def content_length_after(self) -> int:
@@ -103,9 +120,12 @@ class Base(ABC):
             codec = probe['format']['format_name']
         return codec
     
-    @abstractmethod
     def download_video(self):
-        pass
+        raise NotImplementedError("This method should be overridden in subclasses")
+    
+    async def download_video_async(self):
+        raise NotImplementedError("This method should be overridden in subclasses")
+
 
     def _get_video_bitrate(self, file_path: str) -> int:
         probe = ffmpeg.probe(file_path)
