@@ -14,5 +14,5 @@ services:
     devices:
       - /dev/dri:/dev/dri
 
-volumes:
-  db_data:
+# volumes:
+#   db_data:
