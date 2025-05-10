@@ -26,7 +26,7 @@ async def load():
 async def on_ready():
     bot.remove_command('help')
     await load()
-    logger.info("Mustard ready")
+    logger.info("Gelato ready")
 
 
 if __name__ == "__main__":
