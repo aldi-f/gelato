@@ -19,15 +19,24 @@ async def error_reaction(ctx, message=None):
     if message:
         await ctx.send(message)
     await ctx.message.add_reaction("❌")
+    # Add retry reaction to error messages
+    await ctx.message.add_reaction("🔄")
 
 
 class convert(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.lock = asyncio.Lock()
+        self.recent_conversions = {}
 
     @commands.command(name='convert', aliases=['c',])
     async def convert(self, ctx: commands.Context, url: str | None = None, users_mentioned: commands.Greedy[discord.Member] = None, roles_mentioned: commands.Greedy[discord.Role] = None):
+        self.recent_conversions[ctx.message.id] = {
+            'url': url,
+            'users_mentioned': users_mentioned,
+            'roles_mentioned': roles_mentioned,
+            'timestamp': time.time()
+        }
         async with ctx.typing():
             if not url:
                 await error_reaction(ctx,"No url provided")
@@ -218,6 +227,41 @@ class convert(commands.Cog):
                         await ctx.message.delete()
                     # # Delete all temp files
                     website.cleanup()
+
+    @commands.Cog.listener()
+    async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
+        if user.bot:
+            return
+        
+        if str(reaction.emoji) != "🔄":
+            return
+            
+        message = reaction.message
+        
+        # Clean up old entries (older than 1 hour)
+        current_time = time.time()
+        self.recent_conversions = {
+            k: v for k, v in self.recent_conversions.items() 
+            if current_time - v['timestamp'] < 3600
+        }
+        
+        conversion_info = None
+        if message.id in self.recent_conversions:
+            conversion_info = self.recent_conversions[message.id]
+
+        if not conversion_info:
+            return
+
+        context = await self.bot.get_context(message)
+
+        await self.convert(
+                context,
+                url=conversion_info['url'],
+                users_mentioned=conversion_info['users_mentioned'],
+                roles_mentioned=conversion_info['roles_mentioned']
+            )
+        
+        del self.recent_conversions[message.id]
 
 
 async def setup(bot):
