@@ -75,10 +75,11 @@ class Instagram(Base):
             await context.close()
             await browser.close()
 
+        logger.info(f"Video URL: {result}")
+        
         if not result:
             logger.error("No graphql requests")
             raise VideoNotFound("No video found")
-
         return result
 
     @property
