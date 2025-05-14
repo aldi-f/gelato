@@ -53,7 +53,7 @@ class Instagram(Base):
             retry = 0
 
             found = False
-            while retry < 5 and not found:
+            while retry < 10 and not found:
                 for request in results:
                     if request.get("data") and request["data"].get("xdt_shortcode_media"):
                         found = True
