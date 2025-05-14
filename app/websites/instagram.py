@@ -1,6 +1,7 @@
 import re
 import os
 import aiohttp
+import random
 import logging
 import requests
 import tempfile
@@ -39,7 +40,7 @@ class Instagram(Base):
             results = []
 
             async def handle_request(request):
-                if request.url == "https://www.instagram.com/graphql/query" and request.resource_type == "xhr" :
+                if request.url.startswith("https://www.instagram.com/graphql/") or request.url.startswith("https://www.instagram.com/api/grahql/"):
                     response = await request.response()
                     data = await response.json()
                     results.append(data)
@@ -49,19 +50,28 @@ class Instagram(Base):
             await page.goto(self.url)
 
             await page.wait_for_load_state("networkidle")
+            await page.wait_for_timeout(int(random.random() * 1000))
+
 
             retry = 0
-
-            found = False
-            while retry < 10 and not found:
+            result = None
+            while retry < 2 and not result:
                 for request in results:
-                    if request.get("data") and request["data"].get("xdt_shortcode_media"):
-                        found = True
-                        break
-                if not found:
-                    await page.wait_for_timeout(1000)
+                    # scenario 1
+                    result = request.get("data",{}).get("xdt_shortcode_media",{}).get("video_url")
+                    if result:
+                            break
+                    # scenario 2
+                    result = request.get("data",{}).get("user",{}).get("edge_owner_to_timeline_media",{}).get("edges",[])
+                    if len(result) > 0:
+                            result = result[0].get("node",{}).get("video_url",{})
+                    if result:
+                            break
+                        
+                if not result:
+                    await page.reload(wait_until="networkidle")
                     retry += 1
-                
+                    
             await context.close()
             await browser.close()
 
