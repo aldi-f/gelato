@@ -17,7 +17,7 @@ async def error_reaction(ctx, message=None):
     Save me some time by wrapping both error message and the x reaction to original command issuer
     """
     if message:
-        await ctx.send(message)
+        await ctx.send(message, delete_after=5)
     await ctx.message.add_reaction("❌")
     # Add retry reaction to error messages
     await ctx.message.add_reaction("🔄")
