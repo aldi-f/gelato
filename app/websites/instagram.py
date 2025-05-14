@@ -60,13 +60,13 @@ class Instagram(Base):
                     # scenario 1
                     result = request.get("data",{}).get("xdt_shortcode_media",{}).get("video_url")
                     if result:
-                            break
+                        break
                     # scenario 2
                     result = request.get("data",{}).get("user",{}).get("edge_owner_to_timeline_media",{}).get("edges",[])
                     if len(result) > 0:
-                            result = result[0].get("node",{}).get("video_url",{})
+                        result = result[0].get("node",{}).get("video_url",{})
                     if result:
-                            break
+                        break
                         
                 if not result:
                     await page.reload(wait_until="networkidle")
@@ -75,19 +75,11 @@ class Instagram(Base):
             await context.close()
             await browser.close()
 
-        if len(results) == 0:
+        if not result:
             logger.error("No graphql requests")
             raise VideoNotFound("No video found")
-        
-        data = None
-        for result in results:
-            if not result["data"].get("xdt_shortcode_media"):
-                continue
-            data = result["data"]["xdt_shortcode_media"]["video_url"]
-        if not data:
-            logger.error(f"No data: {results=}")
-            raise VideoNotFound("No video found")
-        return data
+
+        return result
 
     @property
     async def download_url_async(self):
