@@ -30,57 +30,76 @@ class Instagram(Base):
         match = re.search(pattern, real_url)
         if match:
             return match.group(1)
+
+    def get_reel_video_url(self):
+        video_id = find_reel_id(url)
+        
+        url = "https://www.instagram.com/graphql/query"
+        payload = {
+            "variables": json.dumps({"shortcode": video_id}),
+            "doc_id": "8845758582119845"
+        }
+
+        response = requests.post(url, data=payload)
+        data = response.json()
+        if not data["data"]["xdt_shortcode_media"]:
+            raise RestrictedVideo("No video found")
+        return data['data']['xdt_shortcode_media']['video_url']
         
     async def get_download_url(self):
-        async with async_playwright() as p:
-            browser = await p.chromium.connect(ws_endpoint=PLAYWRIGHT_HOST)
-            context = await browser.new_context()
-            page = await context.new_page()
+        try:
+            return self.get_reel_video_url()
+        except:
+            # Try to get the video URL using Playwright
+            async with async_playwright() as p:
+                browser = await p.chromium.connect(ws_endpoint=PLAYWRIGHT_HOST)
+                context = await browser.new_context()
+                page = await context.new_page()
 
-            results = []
+                results = []
 
-            async def handle_request(request):
-                if request.url.startswith("https://www.instagram.com/graphql/") or request.url.startswith("https://www.instagram.com/api/grahql/"):
-                    response = await request.response()
-                    data = await response.json()
-                    results.append(data)
+                async def handle_request(request):
+                    if request.url.startswith("https://www.instagram.com/graphql/") or request.url.startswith("https://www.instagram.com/api/grahql/"):
+                        response = await request.response()
+                        data = await response.json()
+                        results.append(data)
 
-            page.on("request", handle_request)
+                page.on("request", handle_request)
 
-            await page.goto(self.url)
+                await page.goto(self.url)
 
-            await page.wait_for_load_state("networkidle")
-            await page.wait_for_timeout(int(random.random() * 1000))
+                await page.wait_for_load_state("networkidle")
+                await page.wait_for_timeout(int(random.random() * 1000))
 
 
-            retry = 0
-            result = None
-            while retry < 2 and not result:
-                for request in results:
-                    # scenario 1
-                    result = request.get("data",{}).get("xdt_shortcode_media",{}).get("video_url")
-                    if result:
-                        break
-                    # scenario 2
-                    result = request.get("data",{}).get("user",{}).get("edge_owner_to_timeline_media",{}).get("edges",[])
-                    if len(result) > 0:
-                        result = result[0].get("node",{}).get("video_url",{})
-                    if result:
-                        break
+                retry = 0
+                result = None
+                while retry < 2 and not result:
+                    for request in results:
+                        # scenario 1
+                        result = request.get("data",{}).get("xdt_shortcode_media",{}).get("video_url")
+                        if result:
+                            break
+                        # scenario 2
+                        result = request.get("data",{}).get("user",{}).get("edge_owner_to_timeline_media",{}).get("edges",[])
+                        if len(result) > 0:
+                            result = result[0].get("node",{}).get("video_url",{})
+                        if result:
+                            break
+                            
+                    if not result:
+                        await page.reload(wait_until="networkidle")
+                        retry += 1
                         
-                if not result:
-                    await page.reload(wait_until="networkidle")
-                    retry += 1
-                    
-            await context.close()
-            await browser.close()
+                await context.close()
+                await browser.close()
 
-        logger.info(f"Video URL: {result}")
-        
-        if not result:
-            logger.error("No graphql requests")
-            raise VideoNotFound("No video found")
-        return result
+            logger.info(f"Video URL: {result}")
+            
+            if not result:
+                logger.error("No graphql requests")
+                raise VideoNotFound("No video found")
+            return result
 
     @property
     async def download_url_async(self):
