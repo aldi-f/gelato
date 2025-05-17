@@ -60,7 +60,7 @@ class Instagram(Base):
             await page.wait_for_load_state("networkidle")
             await page.press("body","Enter")
             try:
-                await page.wait_for_event("response", timeout=15000, predicate=predicate)
+                await page.wait_for_event("response", timeout=20000, predicate=predicate)
             except:
                 logger.error("Timeout waiting for response")
                 raise VideoNotFound("Timeout waiting for response")
