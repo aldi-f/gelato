@@ -1,9 +1,6 @@
 import tempfile
 
 from yt_dlp import YoutubeDL
-
-import ffmpeg
-
 from websites.base import Base
 
 

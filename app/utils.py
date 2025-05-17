@@ -1,7 +1,4 @@
 import re
-import os 
-import json
-import requests
 import math
 
 def is_instagram_reels_url(url: str) -> bool:

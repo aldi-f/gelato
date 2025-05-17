@@ -1,7 +1,8 @@
-import discord
-from discord.ext import commands
-import logging
 import os
+import discord
+import logging
+
+from discord.ext import commands
 from dotenv import load_dotenv
 
 logging.basicConfig(level=logging.INFO)

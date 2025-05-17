@@ -5,7 +5,7 @@ import logging
 import ffmpeg
 import tempfile
 import asyncio
-from abc import ABC, abstractmethod
+from abc import ABC
 from urllib.parse import urlparse
 
 FFMPEG_CODEC = os.getenv("FFMPEG_CODEC", "libx264")

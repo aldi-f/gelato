@@ -1,12 +1,12 @@
 import re
 import os
-import random
+import asyncio 
 import logging
+import random
 import requests
 import tempfile
-import asyncio 
-from camoufox import AsyncCamoufox
 
+from camoufox import AsyncCamoufox
 from websites.base import Base, VideoNotFound
 
 PLAYWRIGHT_HOST = os.getenv("PLAYWRIGHT_HOST", "ws://127.0.0.1:3000/")

@@ -1,9 +1,7 @@
-import ffmpeg
 import logging
 import tempfile
 
 from yt_dlp import YoutubeDL
-
 from websites.base import Base
 
 logger = logging.getLogger(__name__)

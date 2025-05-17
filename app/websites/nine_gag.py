@@ -1,10 +1,7 @@
-import ffmpeg
 import logging
 import tempfile
-import asyncio
 
 from yt_dlp import YoutubeDL
-
 from websites.base import Base
 
 logger = logging.getLogger(__name__)
