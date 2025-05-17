@@ -48,8 +48,10 @@ class Instagram(Base):
                     videos.append(response.url)
             
             def predicate(response):
-                logger.info(response.url)
-                return response.url.startswith("https://instagram.ftia9-1.fna.fbcdn.net/o1/v")
+                if response.url.startswith("https://instagram.ftia9-1.fna.fbcdn.net/o1/v"):
+                    logger.info(response.url)
+                    return True
+                return False
             
             page.on("response", handle_response)
 
