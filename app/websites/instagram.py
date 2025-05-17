@@ -41,7 +41,6 @@ class Instagram(Base):
             videos = []
             audios = []
             async def handle_response(response):
-                print(response.url)
                 if response.url.startswith("https://instagram.ftia9-1.fna.fbcdn.net/o1/v/t16"):
                     audios.append(response.url)
                 if response.url.startswith("https://instagram.ftia9-1.fna.fbcdn.net/o1/v/t2"):
@@ -51,9 +50,9 @@ class Instagram(Base):
             await page.goto(self.url)
 
             await page.wait_for_load_state("networkidle")
-            await page.wait_for_timeout(int(random.random() * 5000))
+            await page.wait_for_timeout(int(random.random() * 1000) + 5000)
 
-            if len(videos) == 0 or len(audios) == 0: # Wait another 5 seconds
+            if len(videos) == 0 or len(audios) == 0: # Wait another ~5 seconds
                 await page.wait_for_timeout(int(random.random() * 1000) + 5000)
             
         
