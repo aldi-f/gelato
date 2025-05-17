@@ -33,18 +33,18 @@ class Base(ABC):
         self.async_download = False
 
     @property
-    def download_url(self):
+    def download_url(self)-> dict[str, str]:
         """
-        URL to download the video from
+        URL to download the video and audio from
         """
-        return self.url
+        return {"video": self.url}
     
     @property
-    async def download_url_async(self):
+    async def download_url_async(self)-> dict[str, str]:
         """
-        URL to download the video from
+        URL to download the video and audio from
         """
-        return self.url
+        return {"video": self.url}
 
     @property
     def content(self) -> bytes:
@@ -64,16 +64,30 @@ class Base(ABC):
         """
         Content length of the video calculated before downloading. Will not be 100% accurate.
         """
-        head_data = requests.head(self.download_url, allow_redirects=True).headers
-        return int(head_data.get("Content-Length", 0))
+        video_url = self.download_url["video"]
+        audio_url = self.download_url.get("audio")
+        video_head_data = requests.head(video_url, allow_redirects=True).headers.get("Content-Length", 0)
+        if audio_url:
+            audio_head_data = requests.head(audio_url, allow_redirects=True).headers.get("Content-Length", 0)
+        else:
+            audio_head_data = 0
+
+        return int(video_head_data) + int(audio_head_data)
     
     @property
     async def content_length_before_async(self) -> int:
         """
         Content length of the video calculated before downloading. Will not be 100% accurate.
         """
-        head_data = requests.head(await self.download_url_async, allow_redirects=True)
-        return int(head_data.headers.get("Content-Length", 0))
+        video_url = (await self.download_url_async)["video"]
+        audio_url = (await self.download_url_async).get("audio")
+        video_head_data = requests.head(video_url, allow_redirects=True).headers.get("Content-Length", 0)
+        if audio_url:
+            audio_head_data = requests.head(audio_url, allow_redirects=True).headers.get("Content-Length", 0)
+        else:
+            audio_head_data = 0
+        
+        return int(video_head_data) + int(audio_head_data)
 
     @property
     def content_length_after(self) -> int:

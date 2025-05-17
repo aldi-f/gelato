@@ -23,7 +23,7 @@ class Twitter(Base):
     def content_length_before(self) -> int:
         # try:
         with YoutubeDL(self.yt_params) as ydl:
-            info = ydl.extract_info(self.download_url, download=False) or {}
+            info = ydl.extract_info(self.download_url["video"], download=False) or {}
 
         if "entries" in info:
             return info["entries"][0].get("filesize",0) or info["entries"][0].get("filesize_approx",0)
@@ -35,7 +35,7 @@ class Twitter(Base):
         Title of the video
         """
         with YoutubeDL(self.yt_params) as ydl:
-            info = ydl.extract_info(self.download_url, download=False) or {}
+            info = ydl.extract_info(self.download_url["video"], download=False) or {}
         
         if info.get("entries", []):
             text = info["entries"][0].get("title", "")
@@ -54,4 +54,4 @@ class Twitter(Base):
 
         # download video
         with YoutubeDL(self.yt_params) as foo:
-            foo.download([self.download_url])
+            foo.download([self.download_url["video"]])

@@ -21,7 +21,7 @@ class Youtube(Base):
     @property
     def content_length_before(self) -> int:
         with YoutubeDL(self.yt_params) as ydl:
-            info = ydl.extract_info(self.download_url, download=False) or {}
+            info = ydl.extract_info(self.download_url["video"], download=False) or {}
 
         filezize = info.get("filesize", 0) or info.get("filesize_approx", 0)
         if not filezize:
@@ -36,7 +36,7 @@ class Youtube(Base):
         Title of the video
         """
         with YoutubeDL(self.yt_params) as ydl:
-            info = ydl.extract_info(self.download_url, download=False) or {}
+            info = ydl.extract_info(self.download_url["video"], download=False) or {}
 
         return "\n`" + info.get("title", "") + "`"
     
@@ -49,7 +49,7 @@ class Youtube(Base):
 
         # download video
         with YoutubeDL(self.yt_params) as ydl:
-            info = ydl.extract_info(self.download_url, download=True)
+            info = ydl.extract_info(self.download_url["video"], download=True)
             # Get actual downloaded file path
             downloaded_file = ydl.prepare_filename(info)
             self.output_path.append(downloaded_file)

@@ -42,6 +42,6 @@ class NineGAG(Base):
         self.yt_params["outtmpl"]= output_name
         # download video
         with YoutubeDL(self.yt_params) as foo:
-            foo.download([self.download_url])
+            foo.download([self.download_url["video"]])
 
 

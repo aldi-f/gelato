@@ -1,11 +1,11 @@
 import re
 import os
-import aiohttp
 import random
 import logging
 import requests
 import tempfile
-from playwright.async_api import async_playwright
+import asyncio 
+from camoufox import AsyncCamoufox
 
 from websites.base import Base, VideoNotFound
 
@@ -31,75 +31,41 @@ class Instagram(Base):
         if match:
             return match.group(1)
 
-    def get_reel_video_url(self):
-        video_id = find_reel_id(url)
-        
-        url = "https://www.instagram.com/graphql/query"
-        payload = {
-            "variables": json.dumps({"shortcode": video_id}),
-            "doc_id": "8845758582119845"
-        }
-
-        response = requests.post(url, data=payload)
-        data = response.json()
-        if not data["data"]["xdt_shortcode_media"]:
-            raise RestrictedVideo("No video found")
-        return data['data']['xdt_shortcode_media']['video_url']
-        
     async def get_download_url(self):
-        try:
-            return self.get_reel_video_url()
-        except:
-            # Try to get the video URL using Playwright
-            async with async_playwright() as p:
-                browser = await p.chromium.connect(ws_endpoint=PLAYWRIGHT_HOST)
-                context = await browser.new_context()
-                page = await context.new_page()
+        # Try to get the video URL using Playwright CamouFox
+        async with AsyncCamoufox(
+            headless=True
+        ) as browser:
+            page = await browser.new_page()
 
-                results = []
+            videos = []
+            audios = []
+            async def handle_response(response):
+                print(response.url)
+                if response.url.startswith("https://instagram.ftia9-1.fna.fbcdn.net/o1/v/t16"):
+                    audios.append(response.url)
+                if response.url.startswith("https://instagram.ftia9-1.fna.fbcdn.net/o1/v/t2"):
+                    videos.append(response.url)
+            page.on("response", handle_response)
 
-                async def handle_request(request):
-                    if request.url.startswith("https://www.instagram.com/graphql/") or request.url.startswith("https://www.instagram.com/api/grahql/"):
-                        response = await request.response()
-                        data = await response.json()
-                        results.append(data)
+            await page.goto(self.url)
 
-                page.on("request", handle_request)
+            await page.wait_for_load_state("networkidle")
+            await page.wait_for_timeout(int(random.random() * 5000))
 
-                await page.goto(self.url)
-
-                await page.wait_for_load_state("networkidle")
-                await page.wait_for_timeout(int(random.random() * 1000))
-
-
-                retry = 0
-                result = None
-                while retry < 2 and not result:
-                    for request in results:
-                        # scenario 1
-                        result = request.get("data",{}).get("xdt_shortcode_media",{}).get("video_url")
-                        if result:
-                            break
-                        # scenario 2
-                        result = request.get("data",{}).get("user",{}).get("edge_owner_to_timeline_media",{}).get("edges",[])
-                        if len(result) > 0:
-                            result = result[0].get("node",{}).get("video_url",{})
-                        if result:
-                            break
-                            
-                    if not result:
-                        await page.reload(wait_until="networkidle")
-                        retry += 1
-                        
-                await context.close()
-                await browser.close()
-
-            logger.info(f"Video URL: {result}")
+            if len(videos) == 0 or len(audios) == 0: # Wait another 5 seconds
+                await page.wait_for_timeout(int(random.random() * 1000) + 5000)
             
-            if not result:
-                logger.error("No graphql requests")
-                raise VideoNotFound("No video found")
-            return result
+        
+        if len(videos) == 0 or len(audios) == 0:
+            logger.error("No videos or audios found in the response.")
+            raise VideoNotFound("No videos or audios found in the response.")
+        
+        # remove bytestart and byteend
+        video_url = re.sub(r"&bytestart=\d+&byteend=\d+", "", videos[0])
+        audio_url = re.sub(r"&bytestart=\d+&byteend=\d+", "", audios[0])
+        
+        return {"video": video_url, "audio": audio_url}
 
     @property
     async def download_url_async(self):
@@ -112,12 +78,45 @@ class Instagram(Base):
             output_name = temp_file.name
             self.output_path.append(output_name)
 
-        content = requests.get(await self.download_url_async).content
+        with tempfile.NamedTemporaryFile(delete=True, suffix='.mp4') as video,\
+                tempfile.NamedTemporaryFile(delete=True, suffix='.aac') as audio:
 
-        # TODO: fix this
-        # async with aiohttp.ClientSession() as session:
-        #     async with session.get(await self.download_url_async, timeout=aiohttp.ClientTimeout(total=60)) as response:
-        #         content = await response.read()
+          with open(video.name, "wb") as file:
+              video_content = requests.get((await self.download_url_async)["video"]).content
+              file.write(video_content)
+          with open(audio.name, "wb") as file:
+              audio_content = requests.get((await self.download_url_async)["audio"]).content
+              file.write(audio_content)
 
-        with open(output_name, "wb") as file:
-            file.write(content)
+          # Merge audio and video using ffmpeg
+          await self._merge_audio_video(video.name, audio.name, output_name)
+    
+    async def _merge_audio_video(self,video_path, audio_path, output_path):
+        try:
+            cmd = [
+                'ffmpeg',
+                '-i', video_path,
+                '-i', audio_path,
+                '-map', '0:v:0',
+                '-map', '1:a:0',
+                '-c:v', "copy",
+                '-c:a', 'aac',
+                '-y',
+                output_path
+            ]
+
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+
+            stdout, stderr = await process.communicate()
+
+            if process.returncode != 0:
+                print(f"FFmpeg error occurred: {stderr.decode()}")
+                raise Exception('FFmpeg failed', stderr.decode())
+
+        except Exception as e:
+            print(f"Error during conversion: {str(e)}")
+            raise
