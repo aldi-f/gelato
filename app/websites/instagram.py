@@ -41,26 +41,40 @@ class Instagram(Base):
             videos = []
             audios = []
             async def handle_response(response):
+                # logger.info(response.url)
                 if response.url.startswith("https://instagram.ftia9-1.fna.fbcdn.net/o1/v/t16"):
                     audios.append(response.url)
                 if response.url.startswith("https://instagram.ftia9-1.fna.fbcdn.net/o1/v/t2"):
                     videos.append(response.url)
+            
+            def predicate(response):
+                logger.info(response.url)
+                return response.url.startswith("https://instagram.ftia9-1.fna.fbcdn.net/o1/v")
+            
             page.on("response", handle_response)
 
             await page.goto(self.url)
 
             await page.wait_for_load_state("networkidle")
-            await page.wait_for_timeout(int(random.random() * 1000) + 5000)
+            await page.press("body","Enter")
+            try:
+                await page.wait_for_event("response", timeout=15000, predicate=predicate)
+            except:
+                logger.error("Timeout waiting for response")
+                raise VideoNotFound("Timeout waiting for response")
+            await page.wait_for_timeout(int(random.random() * 2000) + 5000)
 
-            if len(videos) == 0 or len(audios) == 0: # Wait another ~5 seconds
-                await page.wait_for_timeout(int(random.random() * 1000) + 5000)
-            
         
-        if len(videos) == 0 or len(audios) == 0:
+        if len(videos) == 0 and len(audios) == 0:
             logger.error("No videos or audios found in the response.")
             raise VideoNotFound("No videos or audios found in the response.")
         
-        # remove bytestart and byteend
+        # if only one of them is empty, output all as video
+        if len(videos) == 0:
+            videos = audios
+            video_url = re.sub(r"&bytestart=\d+&byteend=\d+", "", videos[0])
+            return {"video": video_url}
+        
         video_url = re.sub(r"&bytestart=\d+&byteend=\d+", "", videos[0])
         audio_url = re.sub(r"&bytestart=\d+&byteend=\d+", "", audios[0])
         
@@ -77,18 +91,24 @@ class Instagram(Base):
             output_name = temp_file.name
             self.output_path.append(output_name)
 
-        with tempfile.NamedTemporaryFile(delete=True, suffix='.mp4') as video,\
-                tempfile.NamedTemporaryFile(delete=True, suffix='.aac') as audio:
+        if (await self.download_url_async).get("audio") is None:
+            # If no audio URL is found, download the video only
+            video_content = requests.get((await self.download_url_async)["video"]).content
+            with open(output_name, "wb") as file:
+                file.write(video_content)
+                return
+        else: # If audio URL is found, download both video and audio, then merge them
+            with tempfile.NamedTemporaryFile(delete=True, suffix='.mp4') as video,\
+                    tempfile.NamedTemporaryFile(delete=True, suffix='.aac') as audio:
 
-          with open(video.name, "wb") as file:
-              video_content = requests.get((await self.download_url_async)["video"]).content
-              file.write(video_content)
-          with open(audio.name, "wb") as file:
-              audio_content = requests.get((await self.download_url_async)["audio"]).content
-              file.write(audio_content)
+                with open(video.name, "wb") as file:
+                    video_content = requests.get((await self.download_url_async)["video"]).content
+                    file.write(video_content)
+                with open(audio.name, "wb") as file:
+                    audio_content = requests.get((await self.download_url_async)["audio"]).content
+                    file.write(audio_content)
 
-          # Merge audio and video using ffmpeg
-          await self._merge_audio_video(video.name, audio.name, output_name)
+                await self._merge_audio_video(video.name, audio.name, output_name)
     
     async def _merge_audio_video(self,video_path, audio_path, output_path):
         try:
@@ -96,8 +116,6 @@ class Instagram(Base):
                 'ffmpeg',
                 '-i', video_path,
                 '-i', audio_path,
-                '-map', '0:v:0',
-                '-map', '1:a:0',
                 '-c:v', "copy",
                 '-c:a', 'aac',
                 '-y',

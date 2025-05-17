@@ -82,8 +82,8 @@ class convert(commands.Cog):
             try:
 
                 size_before = website.content_length_before if not website.async_download else await website.content_length_before_async
-            except VideoNotFound:
-                await status_message.edit(content="❌ Video not found!")
+            except VideoNotFound as e:
+                await status_message.edit(content=f"❌ {e}")
                 await error_reaction(ctx)
                 return
             except Exception as e:
