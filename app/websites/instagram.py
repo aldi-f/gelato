@@ -155,8 +155,14 @@ class Instagram(Base):
         with YoutubeDL(self.yt_params) as ydl:
             info = ydl.extract_info(self.download_url["video"], download=False) or {}
 
+        test_url = info.get("url")
+        if test_url:
+            response = requests.head(test_url, allow_redirects=True)
+            return int(response.headers.get("Content-Length", 0))
+        
         if "entries" in info:
             return info["entries"][0].get("filesize",0) or info["entries"][0].get("filesize_approx",0)
+        
         return info.get("filesize",0) or info.get("filesize_approx",0)    
     
 
