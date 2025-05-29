@@ -2,6 +2,7 @@ import time
 import asyncio
 import discord
 import logging
+from datetime import datetime, timedelta
 
 from discord.ext import commands
 
@@ -31,6 +32,15 @@ class convert(commands.Cog):
 
     @commands.command(name='convert', aliases=['c',])
     async def convert(self, ctx: commands.Context, url: str | None = None, users_mentioned: commands.Greedy[discord.Member] = None, roles_mentioned: commands.Greedy[discord.Role] = None):
+
+        ban_start = datetime(2025, 5, 29, 21, 23)
+        banned_until = ban_start + timedelta(hours=24)
+
+        if ctx.author.id == 987449481517760522 and datetime.now() < banned_until:
+            await ctx.send(f"Banned until <t:{int(banned_until.timestamp())}D:>")
+            await ctx.message.delete()
+            return
+
         self.recent_conversions[ctx.message.id] = {
             'url': url,
             'users_mentioned': users_mentioned,
@@ -180,7 +190,7 @@ class convert(commands.Cog):
                                 await website.compress_video_medium()
                                 size_after = website.content_length_after
 
-                            if size_after > 10485760:
+                            if size_after > 10485760:message
                                 await status_message.edit(content=f"🔄 Medium compression insufficient ({convert_size(size_after)}). Trying maximum software compression...")
                                 await website.compress_video_maximum()
                                 size_after = website.content_length_after
@@ -225,6 +235,7 @@ class convert(commands.Cog):
                 finally:
                     if delete:
                         await ctx.message.delete()
+                        del self.recent_conversions[ctx.message.id]
                     # # Delete all temp files
                     website.cleanup()
 
@@ -261,8 +272,6 @@ class convert(commands.Cog):
                 roles_mentioned=conversion_info['roles_mentioned']
             )
         
-        del self.recent_conversions[message.id]
-
 
 async def setup(bot):
     await bot.add_cog(convert(bot))
