@@ -37,7 +37,7 @@ class convert(commands.Cog):
         banned_until = ban_start + timedelta(hours=24)
 
         if ctx.author.id == 987449481517760522 and datetime.now() < banned_until:
-            await ctx.send(f"Banned until <t:{int(banned_until.timestamp())}D:>")
+            await ctx.send(f"Banned until <t:{int(banned_until.timestamp())}:D>")
             await ctx.message.delete()
             return
 
