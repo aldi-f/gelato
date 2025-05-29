@@ -190,7 +190,7 @@ class convert(commands.Cog):
                                 await website.compress_video_medium()
                                 size_after = website.content_length_after
 
-                            if size_after > 10485760:message
+                            if size_after > 10485760:
                                 await status_message.edit(content=f"🔄 Medium compression insufficient ({convert_size(size_after)}). Trying maximum software compression...")
                                 await website.compress_video_maximum()
                                 size_after = website.content_length_after
