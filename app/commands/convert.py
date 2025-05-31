@@ -33,14 +33,6 @@ class convert(commands.Cog):
     @commands.command(name='convert', aliases=['c',])
     async def convert(self, ctx: commands.Context, url: str | None = None, users_mentioned: commands.Greedy[discord.Member] = None, roles_mentioned: commands.Greedy[discord.Role] = None):
 
-        ban_start = datetime(2025, 5, 29, 21, 23)
-        banned_until = ban_start + timedelta(hours=24)
-
-        if ctx.author.id == 987449481517760522 and datetime.now() < banned_until:
-            await ctx.send(f"Banned until <t:{int(banned_until.timestamp())}:D>")
-            await ctx.message.delete()
-            return
-
         self.recent_conversions[ctx.message.id] = {
             'url': url,
             'users_mentioned': users_mentioned,
