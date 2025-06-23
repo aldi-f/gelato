@@ -451,6 +451,7 @@ class Base(ABC):
                 'ffmpeg',
                 '-i', input_file,
                 '-c:v', FFMPEG_HW_CODEC,
+                '-vf', 'scale=in_range=full:out_range=full',
                 '-f', 'mp4',
                 '-y',
                 output_name
