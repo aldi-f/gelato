@@ -2,12 +2,11 @@ import time
 import asyncio
 import discord
 import logging
-from datetime import datetime, timedelta
 
 from discord.ext import commands
 
-from utils import is_9gag_url, is_youtube_url, is_instagram_reels_url, is_twitter_url, convert_size
-from websites import Generic, Youtube, NineGAG, Instagram, Twitter
+from utils import is_9gag_url, is_youtube_url, is_instagram_reels_url, is_twitter_url, is_reddit_url, convert_size
+from websites import Generic, Youtube, NineGAG, Instagram, Twitter, Reddit
 from websites.base import RestrictedVideo, VideoNotFound
 
 logger = logging.getLogger(__name__)
@@ -71,6 +70,9 @@ class convert(commands.Cog):
                 elif is_instagram_reels_url(url):
                     website = Instagram(url)
                     logger.info("instagram")
+                elif is_reddit_url(url):
+                    website = Reddit(url)
+                    logger.info("reddit")
                 else:
                     website = Generic(url)
                     logger.info("generic")

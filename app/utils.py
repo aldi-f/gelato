@@ -33,6 +33,14 @@ def is_youtube_url(url: str) -> bool:
         return True
     return False
 
+def is_reddit_url(url: str) -> bool:
+    pattern = r"https?://(?:www\.)?reddit\.com/.*"
+    match = re.match(pattern, url)
+    if match:
+        return True
+    return False
+
+
 def what_website(url: str) -> str:
     if is_9gag_url(url):
         return "9gag"
