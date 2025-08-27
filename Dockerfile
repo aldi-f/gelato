@@ -10,7 +10,7 @@ ENV PATH="/usr/lib/jellyfin-ffmpeg:${PATH}"
 
 COPY requirements.txt .
 
-RUN python3 -m pip install -r requirements.txt --user
+RUN python3 -m pip install -r requirements.txt --user --no-cache-dir
 
 # Install camoufox
 RUN python3 -m pip install camoufox[geoip] --user && \
