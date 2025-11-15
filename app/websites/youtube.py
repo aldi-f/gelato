@@ -14,6 +14,31 @@ class Youtube(Base):
         "format_sort": ["lang:-1", "size:9.5M", "vcodec:h264", "ext:mp4:m4a"],
         # "format": "bv*+ba/b",
     }
+    def __init__(self, url: str, audio_only: bool = False):
+        super().__init__(url)
+        self.audio_only = audio_only
+        if self.audio_only:
+            self.yt_params = {
+                    "format": "ba",
+                    "outtmpl": "abcdef",
+                    "quiet": False,
+                    "writethumbnail": True,
+                    "overwrites": True,
+                    "format_sort": ["size:9M", "ext:m4a"],
+                    "final_ext": "mkv",
+                    "merge_output_format": "mkv",
+                    # Separate this in a function later
+                    # Will add support to add custom cover art as well
+                    "postprocessors": [{"format": "jpg",
+                                        "key": "FFmpegThumbnailsConvertor",
+                                        "when": "before_dl"},
+                                        {"key": "FFmpegVideoRemuxer", "preferedformat": "mkv"},
+                                        {"add_chapters": True,
+                                        "add_infojson": "if_exists",
+                                        "add_metadata": True,
+                                        "key": "FFmpegMetadata"},
+                                        {"already_have_thumbnail": False, "key": "EmbedThumbnail"}],
+                }
 
     @property
     def content_length_before(self) -> int:

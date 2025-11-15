@@ -31,6 +31,7 @@ class Base(ABC):
         self._ffmpeg_codec = FFMPEG_CODEC
         self.convert_to_mp4 = False
         self.async_download = False
+        self.audio_only = False
 
     @property
     def download_url(self)-> dict[str, str]:
@@ -224,19 +225,32 @@ class Base(ABC):
 
         try:
             # Construct ffmpeg command
-            cmd = [
-                'ffmpeg',
-                '-hwaccel', 'qsv',
-                '-i', input_file,
-                '-c:v', FFMPEG_HW_CODEC,
-                '-b:v', str(target_bitrate),
-                '-maxrate', str(target_bitrate),
-                '-bufsize', str(target_bitrate//2),
-                '-acodec', 'copy',
-                '-f', 'mp4',
-                '-y',  # Overwrite output
-                output_name
-            ]
+            if not self.audio_only:
+                cmd = [
+                    'ffmpeg',
+                    '-hwaccel', 'qsv',
+                    '-i', input_file,
+                    '-c:v', FFMPEG_HW_CODEC,
+                    '-b:v', str(target_bitrate),
+                    '-maxrate', str(target_bitrate),
+                    '-bufsize', str(target_bitrate//2),
+                    '-acodec', 'copy',
+                    '-f', 'mp4',
+                    '-y',  # Overwrite output
+                    output_name
+                ]
+            else:
+                cmd = [
+                    'ffmpeg',
+                    '-hwaccel', 'qsv',
+                    '-i', input_file,
+                    '-vn',
+                    '-acodec', 'aac',
+                    '-b:a', '128k',
+                    '-f', 'mp4',
+                    '-y',  # Overwrite output
+                    output_name
+                ]
 
             # Create and run subprocess
             process = await asyncio.create_subprocess_exec(
@@ -271,19 +285,32 @@ class Base(ABC):
 
         try:
             # Construct ffmpeg command
-            cmd = [
-                'ffmpeg',
-                '-hwaccel', 'qsv',
-                '-i', input_file,
-                '-c:v', FFMPEG_HW_CODEC,
-                '-b:v', str(target_bitrate),
-                '-maxrate', str(target_bitrate),
-                '-bufsize', str(target_bitrate//2),
-                '-acodec', 'copy',
-                '-f', 'mp4',
-                '-y',  # Overwrite output
-                output_name
-            ]
+            if not self.audio_only:
+                cmd = [
+                    'ffmpeg',
+                    '-hwaccel', 'qsv',
+                    '-i', input_file,
+                    '-c:v', FFMPEG_HW_CODEC,
+                    '-b:v', str(target_bitrate),
+                    '-maxrate', str(target_bitrate),
+                    '-bufsize', str(target_bitrate//2),
+                    '-acodec', 'copy',
+                    '-f', 'mp4',
+                    '-y',  # Overwrite output
+                    output_name
+                ]
+            else:
+                cmd = [
+                    'ffmpeg',
+                    '-hwaccel', 'qsv',
+                    '-i', input_file,
+                    '-vn',
+                    '-acodec', 'aac',
+                    '-b:a', '96k',
+                    '-f', 'mp4',
+                    '-y',  # Overwrite output
+                    output_name
+                ]
 
             # Create and run subprocess
             process = await asyncio.create_subprocess_exec(
@@ -319,18 +346,30 @@ class Base(ABC):
 
         try:
             # Construct ffmpeg command
-            cmd = [
-                'ffmpeg',
-                '-i', input_file,
-                '-vcodec', self._ffmpeg_codec,
-                '-crf', '28',
-                '-maxrate', str(target_bitrate),
-                '-bufsize', str(target_bitrate),
-                '-acodec', 'copy',
-                '-f', 'mp4',
-                '-y',  # Overwrite output
-                output_name
-            ]
+            if not self.audio_only:
+                cmd = [
+                    'ffmpeg',
+                    '-i', input_file,
+                    '-vcodec', self._ffmpeg_codec,
+                    '-crf', '28',
+                    '-maxrate', str(target_bitrate),
+                    '-bufsize', str(target_bitrate),
+                    '-acodec', 'copy',
+                    '-f', 'mp4',
+                    '-y',  # Overwrite output
+                    output_name
+                ]
+            else:
+                cmd = [
+                    'ffmpeg',
+                    '-i', input_file,
+                    '-vn',
+                    '-acodec', 'aac',
+                    '-b:a', '128k',
+                    '-f', 'mp4',
+                    '-y',  # Overwrite output
+                    output_name
+                ]
 
             # Create and run subprocess
             process = await asyncio.create_subprocess_exec(
@@ -364,19 +403,31 @@ class Base(ABC):
         target_bitrate = int(target_bitrate * 0.85) # 15% reduction
 
         try:
-            cmd = [
-                'ffmpeg',
-                '-i', input_file,
-                '-vcodec', self._ffmpeg_codec,
-                '-crf', '30',
-                '-maxrate', str(target_bitrate),
-                '-bufsize', str(target_bitrate),
-                '-preset', 'slow',
-                '-acodec', 'copy',
-                '-f', 'mp4',
-                '-y',  # Overwrite output
-                output_name
-            ]
+            if not self.audio_only:
+                cmd = [
+                    'ffmpeg',
+                    '-i', input_file,
+                    '-vcodec', self._ffmpeg_codec,
+                    '-crf', '30',
+                    '-maxrate', str(target_bitrate),
+                    '-bufsize', str(target_bitrate),
+                    '-preset', 'slow',
+                    '-acodec', 'copy',
+                    '-f', 'mp4',
+                    '-y',  # Overwrite output
+                    output_name
+                ]
+            else:
+                cmd = [
+                    'ffmpeg',
+                    '-i', input_file,
+                    '-vn',
+                    '-acodec', 'aac',
+                    '-b:a', '96k',
+                    '-f', 'mp4',
+                    '-y',  # Overwrite output
+                    output_name
+                ]
 
             process = await asyncio.create_subprocess_exec(
                 *cmd,
@@ -409,20 +460,32 @@ class Base(ABC):
         target_bitrate = int(target_bitrate * 0.80) # 20% reduction
 
         try:
-            cmd = [
-                'ffmpeg',
-                '-i', input_file,
-                '-vcodec', self._ffmpeg_codec,
-                '-crf', '35',
-                '-maxrate', str(target_bitrate),
-                '-bufsize', str(target_bitrate),
-                '-preset', 'veryslow',
-                '-acodec', 'aac',
-                '-b:a', '96k',
-                '-f', 'mp4',
-                '-y',
-                output_name
-            ]
+            if not self.audio_only:
+                cmd = [
+                    'ffmpeg',
+                    '-i', input_file,
+                    '-vcodec', self._ffmpeg_codec,
+                    '-crf', '35',
+                    '-maxrate', str(target_bitrate),
+                    '-bufsize', str(target_bitrate),
+                    '-preset', 'veryslow',
+                    '-acodec', 'aac',
+                    '-b:a', '96k',
+                    '-f', 'mp4',
+                    '-y',
+                    output_name
+                ]
+            else:
+                cmd = [
+                    'ffmpeg',
+                    '-i', input_file,
+                    '-vn',
+                    '-acodec', 'aac',
+                    '-b:a', '64k',
+                    '-f', 'mp4',
+                    '-y',  # Overwrite output
+                    output_name
+                ]
 
             process = await asyncio.create_subprocess_exec(
                 *cmd,
