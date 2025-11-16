@@ -115,6 +115,16 @@ class Music(commands.Cog):
                         await error_reaction(ctx)
                         logger.exception(e)
                         return
+                    # Convert to mp4
+                    # Discord does not like mkv
+                    await status_message.edit(content="⚙️ Converting video...")
+                    try:
+                        await website.convert_video()
+                    except Exception as e:
+                        await status_message.edit(content="❌ Conversion failed!")
+                        await error_reaction(ctx)
+                        logger.exception(e)
+                        return
                     # Check for size after converting
                     size_after = website.content_length_after
                     if size_after < 5: # empty file but is binary coded with endline)
