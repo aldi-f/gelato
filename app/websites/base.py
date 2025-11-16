@@ -525,14 +525,18 @@ class Base(ABC):
                 thumbnail_file = self.thumbnail_path
                 cmd = [
                     'ffmpeg',
-                    '-i', input_file,
+                    '-loop', '1',
                     '-i', thumbnail_file,
-                    '-map', '0:a',
-                    '-map', '1:v',
-                    '-c:a', 'copy',
-                    '-c:v', 'mjpeg',
-                    '-disposition:v:0', 'attached_pic',
-                    '-movflags', 'use_metadata_tags',
+                    '-i', input_file,
+                    '-map', '0:v',
+                    '-map', '1:a',
+                    '-c:v', self._ffmpeg_codec,
+                    '-tune', 'stillimage',
+                    '-pix_fmt', 'yuv420p',
+                    '-c:a', 'aac',
+                    '-b:a', '128k',
+                    '-shortest',
+                    '-movflags', '+faststart',
                     '-f', 'mp4',
                     '-y',  # Overwrite output
                     output_name
