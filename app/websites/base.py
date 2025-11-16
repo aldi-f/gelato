@@ -523,10 +523,16 @@ class Base(ABC):
             else:
                 cmd = [
                     'ffmpeg',
+                    '-loop', '1',  
                     '-i', input_file,
+                    '-i', input_file,  # Input file again for audio stream
+                    '-map', '0:v',
+                    '-map', '1:a',
                     '-c:v', 'libx264',
                     '-tune', 'stillimage',
-                    '-vframes', '1', # 1 fps, it's static image
+                    '-pix_fmt', 'yuv420p',
+                    '-r', '1',  # 1 fps
+                    '-shortest',  # Match audio duration
                     '-acodec', 'aac',
                     '-b:a', '128k',
                     '-f', 'mp4',
