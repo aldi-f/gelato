@@ -533,6 +533,7 @@ class Base(ABC):
                     '-c:v', self._ffmpeg_codec,
                     '-tune', 'stillimage',
                     '-pix_fmt', 'yuv420p',
+                    '-r', '1', # 1 fps for still image
                     '-c:a', 'aac',
                     '-b:a', '128k',
                     '-shortest',
