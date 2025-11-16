@@ -527,10 +527,12 @@ class Base(ABC):
                     'ffmpeg',
                     '-i', input_file,
                     '-i', thumbnail_file,
-                    '-map', '1',
-                    '-map', '0',
-                    '-c', 'copy',
-                    '-disposition:0', 'attached_pic',
+                    '-map', '0:a',
+                    '-map', '1:v',
+                    '-c:a', 'copy',
+                    '-c:v', 'mjpeg',
+                    '-disposition:v:0', 'attached_pic',
+                    '-movflags', 'use_metadata_tags',
                     '-f', 'mp4',
                     '-y',  # Overwrite output
                     output_name
