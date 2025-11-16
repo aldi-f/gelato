@@ -185,7 +185,7 @@ class Music(commands.Cog):
                         return
                     
                     await status_message.edit(content="📤 Uploading to Discord...")
-                    video = discord.File(website.output_path[-1], filename="output.mkv")
+                    video = discord.File(website.output_path[-1], filename="output.mp4")
 
                     # TODO: database path
                     end = time.time()
