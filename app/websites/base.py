@@ -510,15 +510,27 @@ class Base(ABC):
             self.output_path.append(output_name)
 
         try:
-            cmd = [
-                'ffmpeg',
-                '-i', input_file,
-                '-c:v', FFMPEG_HW_CODEC,
-                '-vf', 'scale=in_range=full:out_range=full',
-                '-f', 'mp4',
-                '-y',
-                output_name
-            ]
+            if not self.audio_only:
+                cmd = [
+                    'ffmpeg',
+                    '-i', input_file,
+                    '-c:v', FFMPEG_HW_CODEC,
+                    '-vf', 'scale=in_range=full:out_range=full',
+                    '-f', 'mp4',
+                    '-y',
+                    output_name
+                ]
+            else:
+                cmd = [
+                    'ffmpeg',
+                    '-i', input_file,
+                    '-vn',
+                    '-acodec', 'aac',
+                    '-b:a', '128k',
+                    '-f', 'mp4',
+                    '-y',  # Overwrite output
+                    output_name
+                ]
 
             process = await asyncio.create_subprocess_exec(
                 *cmd,
