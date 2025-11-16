@@ -1,3 +1,4 @@
+import os
 import tempfile
 
 from yt_dlp import YoutubeDL
@@ -19,25 +20,10 @@ class Youtube(Base):
         self.audio_only = audio_only
         if self.audio_only:
             self.yt_params = {
-                    "format": "ba",
-                    "outtmpl": "abcdef",
-                    "quiet": False,
+                    "quiet": True,
                     "writethumbnail": True,
                     "overwrites": True,
                     "format_sort": ["size:9M", "ext:m4a"],
-                    "final_ext": "mkv",
-                    "merge_output_format": "mkv",
-                    # Separate this in a function later
-                    # Will add support to add custom cover art as well
-                    "postprocessors": [{"format": "jpg",
-                                        "key": "FFmpegThumbnailsConvertor",
-                                        "when": "before_dl"},
-                                        {"key": "FFmpegVideoRemuxer", "preferedformat": "mkv"},
-                                        {"add_chapters": True,
-                                        "add_infojson": "if_exists",
-                                        "add_metadata": True,
-                                        "key": "FFmpegMetadata"},
-                                        {"already_have_thumbnail": False, "key": "EmbedThumbnail"}],
                 }
 
     @property
@@ -73,9 +59,10 @@ class Youtube(Base):
         with YoutubeDL(self.yt_params) as ydl:
             info = ydl.extract_info(self.download_url["video"], download=True)
             # Get actual downloaded file path
-            if self.audio_only:
-                # Rename to .mkv
-                self.output_path.append(output_name + ".mkv")
-            else:
-                downloaded_file = ydl.prepare_filename(info)
-                self.output_path.append(downloaded_file)
+            downloaded_file = ydl.prepare_filename(info)
+            self.output_path.append(downloaded_file)
+            # Get thumbnail path if available
+            if os.path.exists(output_name + ".webp"):
+                self.thumbnail_path = output_name + ".webp"
+            else: 
+                self.thumbnail_path = output_name + ".jpg"

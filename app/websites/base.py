@@ -32,6 +32,7 @@ class Base(ABC):
         self.convert_to_mp4 = False
         self.async_download = False
         self.audio_only = False
+        self.thumbnail_path: str = ""
 
     @property
     def download_url(self)-> dict[str, str]:
@@ -244,7 +245,7 @@ class Base(ABC):
                     'ffmpeg',
                     '-hwaccel', 'qsv',
                     '-i', input_file,
-                    '-vn',
+                    '-c:v', 'copy',
                     '-acodec', 'aac',
                     '-b:a', '128k',
                     '-f', 'mp4',
@@ -304,7 +305,7 @@ class Base(ABC):
                     'ffmpeg',
                     '-hwaccel', 'qsv',
                     '-i', input_file,
-                    '-vn',
+                    '-c:v', 'copy',
                     '-acodec', 'aac',
                     '-b:a', '96k',
                     '-f', 'mp4',
@@ -363,7 +364,7 @@ class Base(ABC):
                 cmd = [
                     'ffmpeg',
                     '-i', input_file,
-                    '-vn',
+                    '-c:v', 'copy',
                     '-acodec', 'aac',
                     '-b:a', '128k',
                     '-f', 'mp4',
@@ -421,7 +422,7 @@ class Base(ABC):
                 cmd = [
                     'ffmpeg',
                     '-i', input_file,
-                    '-vn',
+                    '-c:v', 'copy',
                     '-acodec', 'aac',
                     '-b:a', '96k',
                     '-f', 'mp4',
@@ -479,7 +480,7 @@ class Base(ABC):
                 cmd = [
                     'ffmpeg',
                     '-i', input_file,
-                    '-vn',
+                    '-c:v', 'copy',
                     '-acodec', 'aac',
                     '-b:a', '64k',
                     '-f', 'mp4',
@@ -521,20 +522,15 @@ class Base(ABC):
                     output_name
                 ]
             else:
+                thumbnail_file = self.thumbnail_path
                 cmd = [
                     'ffmpeg',
-                    '-loop', '1',  
                     '-i', input_file,
-                    '-i', input_file,  # Input file again for audio stream
-                    '-map', '0:v',
-                    '-map', '1:a',
-                    '-c:v', 'libx264',
-                    '-tune', 'stillimage',
-                    '-pix_fmt', 'yuv420p',
-                    '-r', '1',  # 1 fps
-                    '-shortest',  # Match audio duration
-                    '-acodec', 'aac',
-                    '-b:a', '128k',
+                    '-i', thumbnail_file,
+                    '-map', '1',
+                    '-map', '0',
+                    '-c', 'copy',
+                    '-disposition:0', 'attached_pic',
                     '-f', 'mp4',
                     '-y',  # Overwrite output
                     output_name
