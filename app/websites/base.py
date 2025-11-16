@@ -525,8 +525,8 @@ class Base(ABC):
                     'ffmpeg',
                     '-i', input_file,
                     '-c:v', 'libx264',
-                    '-r', '1', # 1 fps, it's static image
-                    '-pix_fmt', 'yuv420p',
+                    '-tune', 'stillimage',
+                    '-vframes', '1', # 1 fps, it's static image
                     '-acodec', 'aac',
                     '-b:a', '128k',
                     '-f', 'mp4',
