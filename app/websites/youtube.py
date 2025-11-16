@@ -73,5 +73,9 @@ class Youtube(Base):
         with YoutubeDL(self.yt_params) as ydl:
             info = ydl.extract_info(self.download_url["video"], download=True)
             # Get actual downloaded file path
-            downloaded_file = ydl.prepare_filename(info)
-            self.output_path.append(downloaded_file)
+            if self.audio_only:
+                # Rename to .mkv
+                self.output_path.append(output_name + ".mkv")
+            else:
+                downloaded_file = ydl.prepare_filename(info)
+                self.output_path.append(downloaded_file)
