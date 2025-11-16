@@ -59,7 +59,7 @@ class Music(commands.Cog):
 
             try: 
                 if is_youtube_url(url):
-                    website = Youtube(url)
+                    website = Youtube(url, audio_only=True)
                     logger.info("youtube")
                 else:
                     raise NotImplementedError("Website not supported yet")
