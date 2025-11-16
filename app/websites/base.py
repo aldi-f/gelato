@@ -524,7 +524,9 @@ class Base(ABC):
                 cmd = [
                     'ffmpeg',
                     '-i', input_file,
-                    '-c:v', 'copy',
+                    '-c:v', 'libx264',
+                    '-r', '1', # 1 fps, it's static image
+                    '-pix_fmt', 'yuv420p',
                     '-acodec', 'aac',
                     '-b:a', '128k',
                     '-f', 'mp4',
