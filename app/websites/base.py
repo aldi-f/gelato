@@ -524,7 +524,7 @@ class Base(ABC):
                 cmd = [
                     'ffmpeg',
                     '-i', input_file,
-                    '-vn',
+                    '-c:v', 'copy',
                     '-acodec', 'aac',
                     '-b:a', '128k',
                     '-f', 'mp4',
