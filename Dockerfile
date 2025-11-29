@@ -12,10 +12,6 @@ COPY requirements.txt .
 
 RUN python3 -m pip install -r requirements.txt --user --no-cache-dir
 
-# Install camoufox
-RUN python3 -m pip install camoufox[geoip] --user && \
-    python3 -m camoufox fetch
-
 COPY ./app /app
 
 WORKDIR /app
