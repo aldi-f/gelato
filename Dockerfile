@@ -17,3 +17,5 @@ COPY ./app /app
 WORKDIR /app
 
 CMD ["python3","-m", "gelato"]
+
+LABEL org.opencontainers.image.source=https://github.com/aldi-f/gelato
