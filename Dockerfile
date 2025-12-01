@@ -1,4 +1,5 @@
 FROM python:3.12-bookworm
+LABEL org.opencontainers.image.source=https://github.com/aldi-f/gelato
 
 RUN apt-get update && apt-get install -y wget xvfb libgtk-3-0 libx11-xcb1 libasound2
 
@@ -17,5 +18,3 @@ COPY ./app /app
 WORKDIR /app
 
 CMD ["python3","-m", "gelato"]
-
-LABEL org.opencontainers.image.source=https://github.com/aldi-f/gelato
