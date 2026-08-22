@@ -42,9 +42,9 @@ class convert(commands.Cog):
             if not url:
                 await error_reaction(ctx,"No url provided")
                 return
-            
+
             status_message = await ctx.send("🔍 Checking URL...")
-            
+
             reply_to = None
             delete = False
             mention_message = ""
@@ -57,7 +57,7 @@ class convert(commands.Cog):
             if roles_mentioned:
                 mention_message += " ".join([role.mention for role in roles_mentioned])
 
-            try: 
+            try:
                 if is_9gag_url(url):
                     website = NineGAG(url)
                     logger.info("9gag")
@@ -95,7 +95,7 @@ class convert(commands.Cog):
                 await error_reaction(ctx)
                 logger.exception(e)
                 return
-            
+
             if size_before is None:
                 await status_message.edit(content="❌ Error getting video size")
                 await error_reaction(ctx)
@@ -103,7 +103,7 @@ class convert(commands.Cog):
             if size_before == 0 or size_before > 104857600:
                 await error_reaction(ctx,f"File either empty or too big ({convert_size(size_before)})")
                 return
-        
+
             await status_message.edit(content="🔒 Waiting for lock...")
             async with self.lock:
                 try:
@@ -144,7 +144,7 @@ class convert(commands.Cog):
                         await status_message.edit(content=f"❌ File size too large! ({convert_size(size_after)})")
                         await error_reaction(ctx)
                         return
-                    elif size_after > 10485760: # 10MB
+                    elif size_after > 20971520: # 20MB
                         try: # Encaplusate all compression errors here
                             # Lower resolution if it is higher than 480p
 
@@ -155,36 +155,36 @@ class convert(commands.Cog):
                                 await website.lower_resolution(720)
                                 size_after = website.content_length_after
 
-                            # For files bigger than 25MB, lower to 480p
-                            if size_after  > 10485760 * 2.5 and height > 480: # 25MB
+                            # For files bigger than 50MB, lower to 480p
+                            if size_after  > 20971520 * 2.5 and height > 480:
                                 await status_message.edit(content=f"🔄 File too large ({convert_size(size_after)}). Lowering to 480p...")
                                 await website.lower_resolution(480)
                                 size_after = website.content_length_after
 
                             # Firstly we try simple hardware compression
-                            if size_after > 10485760:
+                            if size_after > 20971520:
                                 await status_message.edit(content=f"🔄 File too large ({convert_size(size_after)}). Trying hardware compression...")
                                 await website.compress_video_hardware_light()
                                 size_after = website.content_length_after
 
                             # Try again with hardware compression but lower bitrate
-                            if size_after > 10485760:
+                            if size_after > 20971520:
                                 await status_message.edit(content=f"🔄 Light hardware compression insufficient ({convert_size(size_after)}). Trying medium hardware compression...")
                                 await website.compress_video_hardware_medium()
                                 size_after = website.content_length_after
 
                             # Then try 3 levels of software compression
-                            if size_after > 10485760:
+                            if size_after > 20971520:
                                 await status_message.edit(content=f"🔄 Medium hardware compression insufficient({convert_size(size_after)}). Trying light software compression...")
                                 await website.compress_video_light()
                                 size_after = website.content_length_after
 
-                            if size_after > 10485760:
+                            if size_after > 20971520:
                                 await status_message.edit(content=f"🔄 Light compression insufficient ({convert_size(size_after)}). Trying medium software compression...")
                                 await website.compress_video_medium()
                                 size_after = website.content_length_after
 
-                            if size_after > 10485760:
+                            if size_after > 20971520:
                                 await status_message.edit(content=f"🔄 Medium compression insufficient ({convert_size(size_after)}). Trying maximum software compression...")
                                 await website.compress_video_maximum()
                                 size_after = website.content_length_after
@@ -194,24 +194,24 @@ class convert(commands.Cog):
                             await error_reaction(ctx)
                             logger.exception(e)
                             return
-                    
+
                     # Check for size after compressing
                     size_after = website.content_length_after
                     if size_after < 5: # empty file but is binary coded with endline)
                         await status_message.edit(content="❌ Compression failed!")
                         await error_reaction(ctx)
                         return
-                    elif size_after > 10485760: # 10MB
+                    elif size_after > 20971520: # 20MB
                         await status_message.edit(content=f"❌ File size too large even after compressing! ({convert_size(size_after)})")
                         await error_reaction(ctx)
                         return
-                    
+
                     await status_message.edit(content="📤 Uploading to Discord...")
                     video = discord.File(website.output_path[-1], filename="output.mp4")
 
                     # TODO: database path
                     end = time.time()
-                    # convert time to seconds 
+                    # convert time to seconds
                     elapsed = int(end - start)
                     logger.info(f"Total time: {elapsed} seconds")
                     if reply_to:
@@ -237,19 +237,19 @@ class convert(commands.Cog):
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
         if user.bot:
             return
-        
+
         if str(reaction.emoji) != "🔄":
             return
-            
+
         message = reaction.message
-        
+
         # Clean up old entries (older than 1 hour)
         current_time = time.time()
         self.recent_conversions = {
-            k: v for k, v in self.recent_conversions.items() 
+            k: v for k, v in self.recent_conversions.items()
             if current_time - v['timestamp'] < 3600
         }
-        
+
         conversion_info = None
         if message.id in self.recent_conversions:
             conversion_info = self.recent_conversions[message.id]
@@ -265,7 +265,7 @@ class convert(commands.Cog):
                 users_mentioned=conversion_info['users_mentioned'],
                 roles_mentioned=conversion_info['roles_mentioned']
             )
-        
+
 
 async def setup(bot):
     await bot.add_cog(convert(bot))
