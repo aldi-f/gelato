@@ -144,13 +144,13 @@ class convert(commands.Cog):
                         await status_message.edit(content=f"❌ File size too large! ({convert_size(size_after)})")
                         await error_reaction(ctx)
                         return
-                    elif size_after > 20971520: # 20MB
+                    elif size_after >= 20971520: # 20MB
                         try: # Encaplusate all compression errors here
                             # Lower resolution if it is higher than 480p
 
                             # If video is higher than 720p, lower it to 720p
                             _, height = website.resolution
-                            if height > 720 or size_after: # 25MB
+                            if height > 720 or size_after:
                                 await status_message.edit(content=f"🔄 File too large ({convert_size(size_after)}) but resolution is over 720p. Lowering to 720p...")
                                 await website.lower_resolution(720)
                                 size_after = website.content_length_after
@@ -162,29 +162,29 @@ class convert(commands.Cog):
                                 size_after = website.content_length_after
 
                             # Firstly we try simple hardware compression
-                            if size_after > 20971520:
+                            if size_after >= 20971520:
                                 await status_message.edit(content=f"🔄 File too large ({convert_size(size_after)}). Trying hardware compression...")
                                 await website.compress_video_hardware_light()
                                 size_after = website.content_length_after
 
                             # Try again with hardware compression but lower bitrate
-                            if size_after > 20971520:
+                            if size_after >= 20971520:
                                 await status_message.edit(content=f"🔄 Light hardware compression insufficient ({convert_size(size_after)}). Trying medium hardware compression...")
                                 await website.compress_video_hardware_medium()
                                 size_after = website.content_length_after
 
                             # Then try 3 levels of software compression
-                            if size_after > 20971520:
+                            if size_after >= 20971520:
                                 await status_message.edit(content=f"🔄 Medium hardware compression insufficient({convert_size(size_after)}). Trying light software compression...")
                                 await website.compress_video_light()
                                 size_after = website.content_length_after
 
-                            if size_after > 20971520:
+                            if size_after >= 20971520:
                                 await status_message.edit(content=f"🔄 Light compression insufficient ({convert_size(size_after)}). Trying medium software compression...")
                                 await website.compress_video_medium()
                                 size_after = website.content_length_after
 
-                            if size_after > 20971520:
+                            if size_after >= 20971520:
                                 await status_message.edit(content=f"🔄 Medium compression insufficient ({convert_size(size_after)}). Trying maximum software compression...")
                                 await website.compress_video_maximum()
                                 size_after = website.content_length_after
@@ -201,11 +201,11 @@ class convert(commands.Cog):
                         await status_message.edit(content="❌ Compression failed!")
                         await error_reaction(ctx)
                         return
-                    elif size_after > 20971520: # 20MB
+                    elif size_after >= 20971520: # 20MB
                         await status_message.edit(content=f"❌ File size too large even after compressing! ({convert_size(size_after)})")
                         await error_reaction(ctx)
                         return
-
+                    logger.info(f"Final size: {size_after}")
                     await status_message.edit(content="📤 Uploading to Discord...")
                     video = discord.File(website.output_path[-1], filename="output.mp4")
 
