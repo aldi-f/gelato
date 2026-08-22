@@ -32,6 +32,8 @@ class Music(commands.Cog):
     @commands.command(name='music', aliases=['m',])
     async def music(self, ctx: commands.Context, url: str | None = None, users_mentioned: commands.Greedy[discord.Member] = None, roles_mentioned: commands.Greedy[discord.Role] = None):
 
+        max_bytes = ctx.guild.filesize_limit if ctx.guild else 10485760
+
         self.recent_conversions[ctx.message.id] = {
             'url': url,
             'users_mentioned': users_mentioned,
@@ -92,7 +94,7 @@ class Music(commands.Cog):
                 await status_message.edit(content="❌ Error getting audio size")
                 await error_reaction(ctx)
                 return
-            if size_before == 0 or size_before > 52428800: # 50MB
+            if size_before == 0 or size_before > max_bytes * 2:
                 await error_reaction(ctx,f"File either empty or too big ({convert_size(size_before)})")
                 return
 
@@ -132,37 +134,37 @@ class Music(commands.Cog):
                         await status_message.edit(content="❌ Conversion failed!")
                         await error_reaction(ctx)
                         return
-                    elif size_after > 52428800: # 50MB
+                    elif size_after > max_bmax_bytes * 2:
                         await status_message.edit(content=f"❌ File size too large! ({convert_size(size_after)})")
                         await error_reaction(ctx)
                         return
-                    elif size_after > 20971520: # 20MB
+                    elif size_after > max_bytes:
                         try: # Encaplusate all compression errors here
 
                             # Firstly we try simple hardware compression
-                            if size_after > 20971520: # 20MB
+                            if size_after > max_bytes:
                                 await status_message.edit(content=f"🔄 File too large ({convert_size(size_after)}). Trying hardware compression...")
                                 await website.compress_video_hardware_light()
                                 size_after = website.content_length_after
 
                             # Try again with hardware compression but lower bitrate
-                            if size_after > 20971520: # 20MB
+                            if size_after > max_bytes:
                                 await status_message.edit(content=f"🔄 Light hardware compression insufficient ({convert_size(size_after)}). Trying medium hardware compression...")
                                 await website.compress_video_hardware_medium()
                                 size_after = website.content_length_after
 
                             # Then try 3 levels of software compression
-                            if size_after > 20971520: # 20MB
+                            if size_after > max_bytes:
                                 await status_message.edit(content=f"🔄 Medium hardware compression insufficient({convert_size(size_after)}). Trying light software compression...")
                                 await website.compress_video_light()
                                 size_after = website.content_length_after
 
-                            if size_after > 20971520: # 20MB
+                            if size_after > max_bytes:
                                 await status_message.edit(content=f"🔄 Light compression insufficient ({convert_size(size_after)}). Trying medium software compression...")
                                 await website.compress_video_medium()
                                 size_after = website.content_length_after
 
-                            if size_after > 20971520: # 20MB
+                            if size_after > max_bytes:
                                 await status_message.edit(content=f"🔄 Medium compression insufficient ({convert_size(size_after)}). Trying maximum software compression...")
                                 await website.compress_video_maximum()
                                 size_after = website.content_length_after
@@ -179,11 +181,12 @@ class Music(commands.Cog):
                         await status_message.edit(content="❌ Compression failed!")
                         await error_reaction(ctx)
                         return
-                    elif size_after > 20971520: # 20MB
+                    elif size_after > max_bytes:
                         await status_message.edit(content=f"❌ File size too large even after compressing! ({convert_size(size_after)})")
                         await error_reaction(ctx)
                         return
 
+                    logger.info(f"Final size: {size_after} (limit {max_bytes})")
                     await status_message.edit(content="📤 Uploading to Discord...")
                     video = discord.File(website.output_path[-1], filename="output.mp4")
 
