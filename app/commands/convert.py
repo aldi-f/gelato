@@ -32,7 +32,8 @@ class convert(commands.Cog):
     @commands.command(name='convert', aliases=['c',])
     async def convert(self, ctx: commands.Context, url: str | None = None, users_mentioned: commands.Greedy[discord.Member] = None, roles_mentioned: commands.Greedy[discord.Role] = None):
 
-        max_bytes = ctx.guild.filesize_limit if ctx.guild else 10485760
+        # max_bytes = ctx.guild.filesize_limit if ctx.guild else 10485760
+        max_bytes = 10485760
 
         self.recent_conversions[ctx.message.id] = {
             'url': url,
