@@ -135,7 +135,7 @@ class Music(commands.Cog):
                         await status_message.edit(content="❌ Conversion failed!")
                         await error_reaction(ctx)
                         return
-                    elif size_after > max_bmax_bytes * 2:
+                    elif size_after > max_bytes * 2:
                         await status_message.edit(content=f"❌ File size too large! ({convert_size(size_after)})")
                         await error_reaction(ctx)
                         return
